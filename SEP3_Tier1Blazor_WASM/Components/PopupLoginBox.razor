@@ -1,0 +1,58 @@
+﻿@using SEP3_Tier1Blazor_WASM.Data
+@using SEP3_Tier1Blazor_WASM.Models
+@inject NavigationManager NavigationManager
+@inject IUserManger UserManger;
+
+<div class="login-popup">
+    <a class="close" style="cursor: pointer" @onclick=CloseComponent>&times;</a>
+    <h2>Welcome</h2>
+    <div class="content">
+        <EditForm OnValidSubmit=SendLoginRequest Model="login">
+            <InputText class="form-input" placeholder="Email" @bind-Value="login.Email" @onkeypress=HideErrorMessage />
+            <InputText type="password" class="form-input" placeholder="Password" style="border-bottom: 5px;" @bind-Value="login.Password" @onkeypress=HideErrorMessage />
+            <p class="message" style="margin-top: 0; margin-bottom: 20px; text-align: left;">Forgot password? <a @onclick=OpenRememberPasswordPage>Remember me</a></p>
+
+            <input type="submit" class="form-button" value="Login"/>
+            <p class="message">Not registered? <a @onclick=OpenRegisterPage>Create an account</a></p>
+            @if (errorVisibility)
+            {
+                 <p class="error-message" style="background-color: red">No users found</p>
+            }
+           
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] 
+    public EventCallback CloseComponent { get; set; }
+
+    private Login login = new Login();
+    private bool errorVisibility = false;
+    
+    private void OpenRegisterPage(){
+        NavigationManager.NavigateTo("/registration");
+    }
+
+    private void OpenRememberPasswordPage(){
+        NavigationManager.NavigateTo("/rememberPassword");
+    }
+
+    private async void SendLoginRequest(){
+        await UserManger.Login(login);
+
+        if (((UserManagerRest)UserManger).CurrentLogged != null){
+            NavigationManager.NavigateTo("/fitnesswall");
+        }
+        else{
+            errorVisibility = true;
+            StateHasChanged();
+        }
+    }
+
+    private void HideErrorMessage()
+    {
+        errorVisibility = false;
+    }
+
+}

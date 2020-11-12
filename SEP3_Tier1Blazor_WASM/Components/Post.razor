@@ -1,0 +1,96 @@
+﻿@using System.Text
+@using SEP3_Tier1Blazor_WASM.Data
+@using SEP3_Tier1Blazor_WASM.Models
+@inject NavigationManager NavigationManager
+@inject IUserManger UserManger
+@inject IPostManager PostManager
+<div class="card gedf-card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="mr-2">
+                    <img class="rounded-circle" width="45" src="https://picsum.photos/50/50" alt="">
+                </div>
+                <div class="ml-2">
+                    <div class="h5 m-0" @onclick=@(e => OpenAuthorProfile(PostData.Owner))>@PostData.Owner.Name</div>
+                    <div class="h7 text-muted">@PostData.CreationTime</div>
+                </div>
+            </div>
+            <div>
+            </div>
+        </div>
+
+    </div>
+    <div class="card-body">
+        <a class="card-link" href="#">
+            <h5 class="card-title">
+                @PostData.Title
+            </h5>
+        </a>
+
+        <p class="card-text">
+            @PostData.Content
+        </p>
+    </div>
+    <div class="card-footer">
+        <a href="#" class="card-link"><i class="fa fa-gittip"></i> Like</a>
+        <a href="#" class="card-link"><i class="fa fa-comment"></i> Comment</a>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public int PostID { get; set; }
+
+    private PostData PostData;
+
+    private string avatarImgSrc;
+    private string reactionSrc = "img/muscule-like.png";
+    private bool commentSectionVisibility = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PostData = await PostManager.GetPost(PostID);
+
+    // avatarImgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(PostData.Owner.Avatar));
+    //if (((UserManagerRest) UserManger).CurrentLogged.LikedPostIds.Contains(PostData.Id))
+        reactionSrc = "img/muscule-liked.png";
+    }
+
+    private void OpenAuthorProfile(User user)
+    {
+        
+        if (user is RegularUser)
+        {
+            string name = user.Name;
+            StringBuilder stringBuilder = new StringBuilder(name);
+            
+            if (user.Name.Contains(" "))
+            {
+                for (int i = 0; i <= stringBuilder.Length; i++)
+                {
+                    if (stringBuilder[i] == (char) 32)
+                    {
+                        stringBuilder[i] = '.';
+                    }
+                }
+            }
+            
+            name = stringBuilder.ToString();
+            NavigationManager.NavigateTo("profile/" + name + "." + user.Id + "/");
+        }
+
+        if (user is PageOwner)
+        {
+            NavigationManager.NavigateTo("profile/" + user.Name + "." + user.Id + "/");
+        }
+    }
+
+    private void ShowCommentSection()
+    {
+        commentSectionVisibility = true;
+        StateHasChanged();
+    }
+
+}

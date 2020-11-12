@@ -1,0 +1,114 @@
+﻿@using System.Text
+@using SEP3_Tier1Blazor_WASM.Data
+@using SEP3_Tier1Blazor_WASM.Models
+@inject NavigationManager NavigationManager
+@inject IUserManger UserManager;
+
+<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow col-12">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">
+            <img class="img-fluid logo" src="@avatarSrc" width="50" height="50" alt="logo"/>
+            ShapeApp
+        </a>
+        <button class="navbar-toggler" type="button" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+            <ul class="navbar-nav flex-grow-1">
+                <li class="nav-item">
+                    <NavLink class="nav-link text-dark" href="" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Home
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link text-dark" href="counter">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Counter
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link text-dark" href="fetchdata">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+                    </NavLink>
+                </li>
+                <input type="text" @bind-value="searchValue"/>
+                <input type="button" value="Search" @onclick="SearchUsers"/>
+                @if (searchVisible)
+                {
+                    <table>
+                        @foreach (var user in users)
+                        {
+                            <tr @onclick=@(e => OpenProfileView(user))>
+                                    <td>@user.Name</td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private string searchValue;
+    private RenderFragment CustomRender { get; set; }
+    bool searchVisible = false;
+    private IList<User> users;
+    private string avatarSrc;
+
+    protected override void OnInitialized()
+    {
+        avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(((UserManagerRest)UserManager).CurrentLogged.Avatar));
+    }
+
+    private async void SearchUsers()
+    {
+        users = await UserManager.GetUsers(searchValue);
+
+        if (users != null && users.Count > 0)
+            searchVisible = true;
+        StateHasChanged();
+    }
+
+
+    bool collapseNavMenu = true;
+    string baseMenuClass = "navbar-collapse d-sm-inline-flex flex-sm-row-reverse";
+    string NavMenuCssClass => baseMenuClass + (collapseNavMenu ? " collapse" : "");
+
+    void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void OpenProfileView(User user)
+    {
+        if (user is RegularUser)
+        {
+              string name = user.Name;
+                    StringBuilder stringBuilder = new StringBuilder(name);
+            
+                    if (user.Name.Contains(" "))
+                    {
+                        for (int i = 0; i <= stringBuilder.Length; i++)
+                        {
+                            if (stringBuilder[i] == (char) 32)
+                            {
+                                stringBuilder[i] = '.';
+                            }
+                        }
+                    }
+            
+                    name = stringBuilder.ToString();
+             NavigationManager.NavigateTo("profile/" + name + "." + user.Id + "/");
+        }
+
+        if (user is PageOwner)
+        {
+            NavigationManager.NavigateTo("profile/" + user.Name + "." + user.Id + "/");
+        }
+      
+        
+       
+    }
+
+}

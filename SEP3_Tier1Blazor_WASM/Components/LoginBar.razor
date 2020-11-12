@@ -1,0 +1,50 @@
+﻿@inject NavigationManager NavigationManager
+
+
+<div class="row justify-content-center login-bar">
+    <div class="col-5"><img class="img-fluid logo" src="/img/logo.png" width="100" height="100" alt="logo" @onclick="ShowIndexPage"/></div>
+    <div class="col-5 text-right">
+        <div style="display: inline-block;position:relative;z-index: 2">
+            <button @onclick=RenderComponent>Login</button>
+            @CustomRender
+        </div>
+    </div>
+</div>
+
+@code {
+    
+    private bool showPopup = false;
+    private string popupVisibility;
+    private int popupTopPosition;
+    private static int count = 1;
+    private RenderFragment CustomRender { get; set; }
+    private PopupLoginBox popupLoginBox;
+
+    private void RenderComponent()
+    {
+        if (!showPopup)
+        {
+            CustomRender = @<Animate Animation="Animations.ZoomIn">
+                               <PopupLoginBox CloseComponent="ClosePopupBox"/>
+                           </Animate>;
+            showPopup = true;
+        }
+        else
+        {
+            CustomRender = null;
+            showPopup = false;
+        }
+    }
+
+    public void ClosePopupBox()
+    {
+        CustomRender = null;
+        showPopup = false;
+    }
+
+    private void ShowIndexPage()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+}

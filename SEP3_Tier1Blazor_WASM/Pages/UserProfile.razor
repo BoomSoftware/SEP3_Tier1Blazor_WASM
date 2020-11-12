@@ -1,0 +1,103 @@
+﻿@inject IUserManger UserManger
+
+@page "/profile/{UserArgument}/"
+
+@using SEP3_Tier1Blazor_WASM.Data
+
+@if (user != null)
+{
+    <div class="container">
+        <header style="background-image: url(@bgSrc)"/>
+        <main>
+            <div class="row">
+                <div class="left col-lg-4">
+                    <div class="photo-left">
+                        <img class="avatar" src=@avatarSrc/>
+                    </div>
+                    <h4 class="name">@user.Name</h4>
+                    @if (user is RegularUser regularUser)
+                     {
+                         <p class="info">@regularUser.City</p>
+                     }
+    
+                     @if (user is PageOwner pageOwner)
+                     {
+                         <p class="info">@pageOwner.Address.Street @pageOwner.Address.Number</p>
+                         <p class="info">@pageOwner.Address.City @pageOwner.Address.PostalCode</p>
+                     }
+    
+                    <div class="stats row">
+                        <div class="stat col-xs-4" style="padding-right: 50px;">
+                            <p class="number-stat">####</p>
+                            <p class="desc-stat">Friends</p>
+                        </div>
+                        <div class="stat col-xs-4">
+                            <p class="number-stat">####</p>
+                            <p class="desc-stat">Posts</p>
+                        </div>
+                        <div class="stat col-xs-4" style="padding-left: 50px;">
+                            <p class="number-stat">####</p>
+                            <p class="desc-stat">Points</p>
+                        </div>
+                    </div>
+                    <p class="desc">@user.Description</p>
+                </div>
+                <div class="right col-lg-8">
+                    <ul class="nav">
+                        <li>Own Posts</li>
+                        <li>Liked Posts</li>
+                        <li>About</li>
+                    </ul>
+                    <span class="follow">Add Friend</span>
+                     <div class="row gallery">
+@*                           @foreach(int postId in user.PostIds) *@
+@*                           { *@
+@*                               <div class="col-md-12"> *@
+@*                                   <Post PostID="1"/> *@
+@*                               </div> *@
+@*                           } *@
+                     </div>
+                </div>
+            </div>
+        </main>
+    </div>
+}
+
+
+@code {
+
+    [Parameter]
+    public string UserArgument { get; set; }
+
+    private User user;
+    private int id;
+    private string avatarSrc;
+    private string bgSrc;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        user =  await UserManger.GetUser(id);
+
+        avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
+        bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        string[] tempUser = UserArgument.Split('.');
+        if (tempUser.Length == 3)
+            id = Int32.Parse(tempUser[2]);
+        if (tempUser.Length == 2)
+            id = Int32.Parse(tempUser[1]);
+    }
+
+
+
+
+
+
+
+
+
+}
