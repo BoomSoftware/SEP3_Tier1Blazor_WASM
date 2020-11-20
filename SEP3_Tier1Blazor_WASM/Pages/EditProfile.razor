@@ -1,0 +1,94 @@
+﻿@inject IUserManger UserManger
+
+@page "/profile/{UserArgument}/edit/"
+
+
+<div class="container-fluid">
+ <WallNavBar/>
+    <div class="main">
+        <div class="row h-100 justify-content-md-center">
+            <div class="col-lg-5 col-md-12 my-auto">
+                <h1 style="font-size: 38px">Select type of the account:</h1>
+                <button class="action-button purple @generalInfoPressedButton" @onclick=ShowGeneralInformation>
+                    <img src="/img/user.svg">
+                </button>
+                <button class="action-button purple @moreInfoPressedButton" @onclick=ShowMoreInformation>
+                    <img src="/img/company.svg">
+                </button>
+            </div>
+            <div class="col-lg-5 col-md-12 text-center">
+                <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
+                    @registerFormRender
+                </Animate>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public string UserArgument { get; set; }
+
+    private int id;
+    private User user;
+    private bool isPageOwer;
+    private RenderFragment registerFormRender;
+    private string generalInfoPressedButton;
+    private string moreInfoPressedButton;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserManger.GetUser(id);
+
+    // avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
+    // bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        string[] tempUser = UserArgument.Split('.');
+        if (tempUser.Length == 3)
+        {
+            id = Int32.Parse(tempUser[2]);
+            isPageOwer = false;
+        }
+
+        if (tempUser.Length == 2)
+        {
+            id = Int32.Parse(tempUser[1]);
+            isPageOwer = true;
+        }
+    }
+
+    private void ShowGeneralInformation()
+    {
+        if (!isPageOwer)
+        {
+            registerFormRender = @<Animate Animation="Animations.ZoomIn">
+                                     <RegisterForm AccountType="RegularUser"/>
+                                 </Animate>;
+            generalInfoPressedButton = "action-button-pressed";
+            moreInfoPressedButton = "";
+        }
+
+
+        else
+        {
+            registerFormRender = @<Animate Animation="Animations.ZoomIn">
+                                     <RegisterForm AccountType="PageOwner"/>
+                                 </Animate>;
+            generalInfoPressedButton = "action-button-pressed";
+            moreInfoPressedButton = "";
+        }
+    }
+
+    private void ShowMoreInformation()
+    {
+        registerFormRender = @<Animate Animation="Animations.ZoomIn">
+                                     <RegisterForm EditedUser="@user" IsEditForm="true"/>
+                                 </Animate>;
+            generalInfoPressedButton = "action-button-pressed";
+            moreInfoPressedButton = "";
+    }
+}

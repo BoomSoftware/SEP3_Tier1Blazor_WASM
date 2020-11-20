@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using SEP3_Tier1Blazor_WASM.Models;
 
-namespace SEP3_Tier1Blazor_WASM.Data
+namespace SEP3_Tier1Blazor_WASM.Data.PostingData
 {
     public interface IPostManager
     {
@@ -11,6 +11,5 @@ namespace SEP3_Tier1Blazor_WASM.Data
         Task EditPost(int id, PostData editedPost);
         Task<PostData> GetPost(int id);
         Task<List<PostData>> GetUserPosts(int userId);
-        //
     }
 }

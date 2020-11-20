@@ -1,5 +1,7 @@
 ﻿@using System.Text
 @using SEP3_Tier1Blazor_WASM.Data
+@using SEP3_Tier1Blazor_WASM.Data.PostingData
+@using SEP3_Tier1Blazor_WASM.Data.UserData
 @using SEP3_Tier1Blazor_WASM.Models
 @inject NavigationManager NavigationManager
 @inject IUserManger UserManger
@@ -60,28 +62,24 @@
 
     private void OpenAuthorProfile(User user)
     {
-        
-        if (user is RegularUser)
+        if (user.Name.Contains(" "))
         {
             string name = user.Name;
             StringBuilder stringBuilder = new StringBuilder(name);
-            
-            if (user.Name.Contains(" "))
+
+            for (int i = 0; i <= stringBuilder.Length; i++)
             {
-                for (int i = 0; i <= stringBuilder.Length; i++)
+                if (stringBuilder[i] == (char) 32)
                 {
-                    if (stringBuilder[i] == (char) 32)
-                    {
-                        stringBuilder[i] = '.';
-                    }
+                    stringBuilder[i] = '.';
                 }
             }
-            
+
             name = stringBuilder.ToString();
             NavigationManager.NavigateTo("profile/" + name + "." + user.Id + "/");
         }
 
-        if (user is PageOwner)
+        else
         {
             NavigationManager.NavigateTo("profile/" + user.Name + "." + user.Id + "/");
         }

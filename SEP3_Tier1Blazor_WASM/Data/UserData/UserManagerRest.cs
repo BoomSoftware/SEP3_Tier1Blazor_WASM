@@ -6,19 +6,16 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using SEP3_Tier1Blazor_WASM.Models;
 
-namespace SEP3_Tier1Blazor_WASM.Data
+namespace SEP3_Tier1Blazor_WASM.Data.UserData
 {
     public class UserManagerRest : IUserManger
     {
         public UserShortVersion CurrentLogged { get; private set; }
         private HttpClient client;
         private string uri;
-        
+        private IList<User> users;
 
-        private IList<RegularUser> regularUsers;
-        private IList<PageOwner> pageOwners;
-        
-        
+
         public UserManagerRest()
         {
             client = new HttpClient();
@@ -38,37 +35,28 @@ namespace SEP3_Tier1Blazor_WASM.Data
             HttpResponseMessage response = await client.PostAsync(uri, content);
         }
 
-        public Task RemoveRegularUser(int id)
+        public async Task RemoveUser(int id)
         {
-            throw new System.NotImplementedException();
+            HttpResponseMessage response = await client.DeleteAsync($"{uri}/{id}");
         }
 
-        public Task RemovePageOwner(int id)
+        public async Task EditUser(User editedUser)
         {
-            throw new System.NotImplementedException();
-        }
+            string userSerialized = JsonSerializer.Serialize(editedUser);
+            StringContent content = new StringContent(
+                userSerialized,
+                Encoding.UTF8,
+                "Application/json");
 
-        public Task EditRegularUser(int id, User editedUser)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task EditPageOwner(int id, PageOwner editedPageOwner)
-        {
-            throw new System.NotImplementedException();
+            HttpResponseMessage response = await client.PutAsync($"{uri}/{editedUser.Id}", content);
         }
 
         public async Task<User> GetUser(int id)
         {
             string result = await client.GetStringAsync($"{uri}/{id}");
             Console.WriteLine(result);
-
-            User user = null;
-
-            if (result.Contains("RegularUser"))
-            {
-                user = JsonSerializer.Deserialize<RegularUser>(result);
-            }
+            
+            User user = JsonSerializer.Deserialize<User>(result);
 
             return user;
         }
@@ -103,20 +91,16 @@ namespace SEP3_Tier1Blazor_WASM.Data
                 "Application/json");
             
             HttpResponseMessage result = await client.GetAsync($"{uri}?email={login.Email}&password={login.Password}");
-            if (result.IsSuccessStatusCode)
-            {
+            if (result.IsSuccessStatusCode) {
                 string responseString = await result.Content.ReadAsStringAsync();
                 if (responseString == null || responseString.Equals(""))
                     CurrentLogged = null;
                 else
                     CurrentLogged = JsonSerializer.Deserialize<UserShortVersion>(responseString);
             }
-            else
-            {
+            else {
                 CurrentLogged = null;
             }
-
-            
         }
     }
 }

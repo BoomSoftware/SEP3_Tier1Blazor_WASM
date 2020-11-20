@@ -1,4 +1,4 @@
-﻿﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
  namespace SEP3_Tier1Blazor_WASM.Models
 {
@@ -9,11 +9,5 @@
         
         [JsonPropertyName("number")]
         public string Number { get; set; }
-        
-        [JsonPropertyName("city")]
-        public string City { get; set; }
-        
-        [JsonPropertyName("postalCode")]
-        public string PostalCode { get; set; }
     }
 }

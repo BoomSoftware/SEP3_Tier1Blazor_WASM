@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace SEP3_Tier1Blazor_WASM.Models
 {
-    public abstract class User
+    public class User
     {
         [JsonPropertyName("id")]
         public int Id { get; set; }
@@ -17,9 +17,9 @@ namespace SEP3_Tier1Blazor_WASM.Models
         [JsonPropertyName("name")]
         public string Name { get; set; }
         
-        [JsonPropertyName("accountType")]
-        public string AccountType { get; set; }
-        
+        [JsonPropertyName("city")]
+        public string City { get; set; }
+
         [JsonPropertyName("description")]
         public string Description { get; set; }
         
@@ -34,11 +34,14 @@ namespace SEP3_Tier1Blazor_WASM.Models
         
         [JsonPropertyName("profileBackground")]
         public byte[] ProfileBackground { get; set; }
+        
+        [JsonPropertyName("address")]
+        public Address Address { get; set; }
 
 
         public override string ToString()
         {
-            return Id + Name + Email + Password + AccountType + Avatar + ProfileBackground + LikedPostIds + PostIds +
+            return Id + Name + Email + Password + Avatar + ProfileBackground + LikedPostIds + PostIds +
                    Description;
         }
     }

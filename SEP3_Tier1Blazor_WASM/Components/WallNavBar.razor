@@ -1,16 +1,18 @@
 ﻿@using System.Text
 @using SEP3_Tier1Blazor_WASM.Data
+@using SEP3_Tier1Blazor_WASM.Data.UserData
 @using SEP3_Tier1Blazor_WASM.Models
 @inject NavigationManager NavigationManager
 @inject IUserManger UserManager;
 
 <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow col-12">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">
-            <img class="img-fluid logo" src="@avatarSrc" width="50" height="50" alt="logo"/>
+        
+        <a class="navbar-brand" href="@avatarSrc" width="60" height="60">
             ShapeApp
         </a>
         <button class="navbar-toggler" type="button" @onclick="ToggleNavMenu">
+            <img src="http://placehold.it/150x50?text=Logo" alt="">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
@@ -38,9 +40,9 @@
                         @foreach (var user in users)
                         {
                             <tr @onclick=@(e => OpenProfileView(user))>
-                                    <td>@user.Name</td>
-                                </tr>
-                            }
+                                <td>@user.Name</td>
+                            </tr>
+                        }
                         }
                     </table>
                 }
@@ -58,7 +60,7 @@
 
     protected override void OnInitialized()
     {
-        avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(((UserManagerRest)UserManager).CurrentLogged.Avatar));
+       // avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(((UserManagerRest)UserManager).CurrentLogged.Avatar));
     }
 
     private async void SearchUsers()
@@ -82,8 +84,7 @@
 
     private void OpenProfileView(User user)
     {
-        if (user is RegularUser)
-        {
+        if (user.Name.Contains(" ")){
               string name = user.Name;
                     StringBuilder stringBuilder = new StringBuilder(name);
             
@@ -101,14 +102,9 @@
                     name = stringBuilder.ToString();
              NavigationManager.NavigateTo("profile/" + name + "." + user.Id + "/");
         }
-
-        if (user is PageOwner)
-        {
+        else{
             NavigationManager.NavigateTo("profile/" + user.Name + "." + user.Id + "/");
         }
-      
-        
-       
     }
 
 }

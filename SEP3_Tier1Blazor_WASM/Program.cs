@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SEP3_Tier1Blazor_WASM.Data;
+using SEP3_Tier1Blazor_WASM.Data.PostingData;
+using SEP3_Tier1Blazor_WASM.Data.UserData;
 
 namespace SEP3_Tier1Blazor_WASM
 {

@@ -3,6 +3,7 @@
 @page "/profile/{UserArgument}/"
 
 @using SEP3_Tier1Blazor_WASM.Data
+@using SEP3_Tier1Blazor_WASM.Data.UserData
 
 @if (user != null)
 {
@@ -12,19 +13,15 @@
             <div class="row">
                 <div class="left col-lg-4">
                     <div class="photo-left">
-                        <img class="avatar" src=@avatarSrc/>
+                        @* <img class="avatar" src=@avatarSrc/> *@
                     </div>
                     <h4 class="name">@user.Name</h4>
-                    @if (user is RegularUser regularUser)
-                     {
-                         <p class="info">@regularUser.City</p>
-                     }
-    
-                     @if (user is PageOwner pageOwner)
-                     {
-                         <p class="info">@pageOwner.Address.Street @pageOwner.Address.Number</p>
-                         <p class="info">@pageOwner.Address.City @pageOwner.Address.PostalCode</p>
-                     }
+                    <p class="info">@user.City</p>
+
+                    @if (user.Address != null)
+                    {
+                         <p class="info">@user.Address.Street @user.Address.Number</p>
+                    }
     
                     <div class="stats row">
                         <div class="stat col-xs-4" style="padding-right: 50px;">
@@ -79,8 +76,11 @@
     {
         user =  await UserManger.GetUser(id);
 
-        avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
-        bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
+       // avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
+       // bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
+        
+        
+        //Console.WriteLine(user.Avatar.Length);
     }
 
     protected override async Task OnParametersSetAsync()
