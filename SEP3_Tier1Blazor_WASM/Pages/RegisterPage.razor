@@ -30,7 +30,7 @@
     private void ShowUserForm()
     {
         registerFormRender = @<Animate Animation="Animations.ZoomIn">
-                                 <RegisterForm AccountType="RegularUser"/>
+                                 <RegisterForm AccountType="RegularUser" IsEditForm="false"/>
                              </Animate>;
         userPressedButton = "action-button-pressed";
         companyPressedButton = "";
@@ -39,7 +39,7 @@
     private void ShowCompanyForm()
     {
         registerFormRender = @<Animate Animation="Animations.ZoomIn">
-                                 <RegisterForm AccountType="PageOwner"/>
+                                 <RegisterForm AccountType="PageOwner" IsEditForm="false"/>
                              </Animate>;
         companyPressedButton = "action-button-pressed";
         userPressedButton = "";

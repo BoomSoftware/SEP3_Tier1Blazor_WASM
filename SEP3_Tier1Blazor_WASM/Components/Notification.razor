@@ -1,0 +1,48 @@
+﻿@inject NavigationManager NavigationManager
+
+<a class="dropdown-item" @onclick=OpenActionView>
+    <img src="@avatarSrc" width="20" height="20">
+    @if (Model.Type.Equals(NotificationType.NewMessage))
+    {
+        <h2>New message received!</h2>
+    }
+    
+    @if (Model.Type.Equals(NotificationType.FriendRequest))
+    {
+        <h2>New friend request received!</h2>
+    }
+    <p>@Model.Content</p>
+</a>
+
+@code {
+    
+    [Parameter]
+    public NotificationModel Model { get; set; }
+
+    private string avatarSrc;
+
+    protected override void OnInitialized()
+    {
+        if (Model.NotificationOwner.Avatar == null)
+            avatarSrc = "/img/default-avatar.png";
+        else
+            avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(Model.NotificationOwner.Avatar));
+    }
+
+
+    private void OpenActionView()
+    {
+        if (Model.Type.Equals(NotificationType.FriendRequest))
+        {
+            NavigationManager.NavigateTo("profile/" + StaticFunctions.GetUserUri(Model.NotificationOwner.UserFullName) + "." + Model.NotificationOwner.UserId + "/");
+        }
+
+        if (Model.Type.Equals(Models.NotificationType.NewMessage))
+        {
+            //Go to the chat with selected user ****
+        }
+    }
+    
+    
+    
+}

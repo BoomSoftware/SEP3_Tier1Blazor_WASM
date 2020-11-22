@@ -1,4 +1,6 @@
 ﻿@inject IUserManger UserManger
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS;
 
 @page "/profile/{UserArgument}/"
 
@@ -13,16 +15,16 @@
             <div class="row">
                 <div class="left col-lg-4">
                     <div class="photo-left">
-                        @* <img class="avatar" src=@avatarSrc/> *@
+                        <img class="profile-avatar" src=@avatarSrc />
                     </div>
                     <h4 class="name">@user.Name</h4>
                     <p class="info">@user.City</p>
 
                     @if (user.Address != null)
                     {
-                         <p class="info">@user.Address.Street @user.Address.Number</p>
+                        <p class="info">@user.Address.Street @user.Address.Number</p>
                     }
-    
+
                     <div class="stats row">
                         <div class="stat col-xs-4" style="padding-right: 50px;">
                             <p class="number-stat">####</p>
@@ -40,24 +42,27 @@
                     <p class="desc">@user.Description</p>
                 </div>
                 <div class="right col-lg-8">
-                    <ul class="nav">
+                    <ul class="profile-nav">
                         <li>Own Posts</li>
                         <li>Liked Posts</li>
                         <li>About</li>
                     </ul>
-                    <span class="follow">Add Friend</span>
-                     <div class="row gallery">
-@*                           @foreach(int postId in user.PostIds) *@
-@*                           { *@
-@*                               <div class="col-md-12"> *@
-@*                                   <Post PostID="1"/> *@
-@*                               </div> *@
-@*                           } *@
-                     </div>
+                    @* <span class="follow" @onclick=OnAddNewFriend>Add Friend</span> *@
+                    <span class="follow" @onclick=OnDeleteAccount>Delete Account</span>
+                    @* <span class="follow" @onclick=OnReportUser>Report User</span> *@
+                    <div class="row gallery">
+                        @*                           @foreach(int postId in user.PostIds) *@
+                        @*                           { *@
+                        @*                               <div class="col-md-12"> *@
+                        @*                                   <Post PostID="1"/> *@
+                        @*                               </div> *@
+                        @*                           } *@
+                    </div>
                 </div>
             </div>
         </main>
     </div>
+    
 }
 
 
@@ -74,23 +79,63 @@
 
     protected override async Task OnInitializedAsync()
     {
-        user =  await UserManger.GetUser(id);
-
-       // avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
-       // bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
-        
-        
-        //Console.WriteLine(user.Avatar.Length);
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
         string[] tempUser = UserArgument.Split('.');
         if (tempUser.Length == 3)
             id = Int32.Parse(tempUser[2]);
         if (tempUser.Length == 2)
             id = Int32.Parse(tempUser[1]);
+
+        user = await UserManger.GetUser(id);
+
+        if (user.Avatar == null)
+            avatarSrc = "/img/default-avatar.png";
+        else
+            avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
+
+        if (user.ProfileBackground == null)
+            bgSrc = "/img/default-bg.jpg";
+        else
+            bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
     }
+
+    private void OnDeleteAccount()
+    {
+        if (UserManger.RemoveUser(id).IsCompletedSuccessfully)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+    //display error connection message
+        }
+    }
+
+    private void OnAddNewFriend()
+    {
+        if (JS.InvokeVoidAsync("sendName", new object[] {((UserManagerRest) UserManger).CurrentLogged.UserId, id}).IsCompletedSuccessfully)
+        {
+            //request sent successfully
+        }
+
+        else
+        {
+            //server error
+        }
+    }
+
+    private void OnReportUser()
+    {
+        if (UserManger.ReportUser(id).IsCompletedSuccessfully)
+        {
+    //display successful message
+        }
+
+        else
+        {
+    //display error connection message
+        }
+    }
+    
 
 
 

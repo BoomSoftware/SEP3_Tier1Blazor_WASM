@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SEP3_Tier1Blazor_WASM.Data;
+using SEP3_Tier1Blazor_WASM.Data.AdminData;
 using SEP3_Tier1Blazor_WASM.Data.PostingData;
 using SEP3_Tier1Blazor_WASM.Data.UserData;
 
@@ -24,6 +25,8 @@ namespace SEP3_Tier1Blazor_WASM
                 sp => new HttpClient {BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)});
             builder.Services.AddSingleton<IUserManger, UserManagerRest>();
             builder.Services.AddSingleton<IPostManager, PostManagerRest>();
+            builder.Services.AddSingleton<IAdminManager, AdminManagerRest>();
+
             await builder.Build().RunAsync();
         }
     }

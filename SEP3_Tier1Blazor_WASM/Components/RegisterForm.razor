@@ -1,64 +1,128 @@
 ﻿@using SEP3_Tier1Blazor_WASM.Data
 @using SEP3_Tier1Blazor_WASM.Data.UserData
 @using SEP3_Tier1Blazor_WASM.Models
+@using System.Net
 @inject NavigationManager NavigationManager
 @inject IUserManger UserManger
 
-@if (!IsEditForm)
-{
-    <div class="login-popup">
+<div class="login-popup">
+    @if (IsEditForm)
+    {
+        <h2>Edit</h2>
+    }
+    else
+    {
         <h2>Registration</h2>
-        <div class="content">
-            <EditForm Model="@User" OnValidSubmit="CreateAccount">
-                @if (AccountType.Equals("RegularUser"))
-                {
-                    <div class="control-group">
-                        <InputText class="form-input" placeholder="First Name" @bind-Value="firstName" @onclick=HideResult />
-                        <InputText class="form-input" placeholder="Last Name" @bind-Value="lastName" @onclick=HideResult />
-                    </div>
-                }
+    }
 
-                @if (AccountType.Equals("PageOwner"))
-                {
-                    <InputText class="form-input" placeholder="Name" @bind-Value="User.Name" @onclick=HideResult />
-                }
-
-                <InputText class="form-input" placeholder="Email" @bind-Value="User.Email" @onclick=HideResult />
-                <InputText type="password" class="form-input" placeholder="Password"@bind-Value="User.Password" @onclick=HideResult />
-                <InputText type="password" class="form-input" placeholder="Password Confirmation" style="border-bottom: 5px;" @bind-Value="passwordConfirmation" @onclick=HideResult />
-
-                @if (AccountType.Equals("RegularUser"))
-                {
+<div class="content">
+    @if (IsEditForm)
+    {
+        <EditForm Model="@User" OnValidSubmit="EditAccount">
+                
+            @if (AccountType.Equals("RegularUser"))
+            {
+                <div class="control-group">
+                    <InputText class="form-input" placeholder="First Name" @bind-Value="firstName" @onclick=HideResult />
+                    <InputText class="form-input" placeholder="Last Name" @bind-Value="lastName" @onclick=HideResult />
+                </div>
+            }
+                
+            @if (AccountType.Equals("PageOwner"))
+            {
+                <InputText class="form-input" placeholder="Name" @bind-Value="User.Name" @onclick=HideResult />
+            }
+                 
+            <InputText class="form-input" placeholder="Email" @bind-Value="User.Email" @onclick=HideResult />
+            <InputText type="password" class="form-input" placeholder="Password"@bind-Value="User.Password" @onclick=HideResult />
+            <InputText type="password" class="form-input" placeholder="Password Confirmation" style="border-bottom: 5px;" @bind-Value="passwordConfirmation" @onclick=HideResult />
+                
+            @if (AccountType.Equals("RegularUser"))
+            {
+                <InputText class="form-input" placeholder="City" style="border-bottom: 5px;" @bind-Value="User.City" @onclick=HideResult />
+            }
+                
+            @if (AccountType.Equals("PageOwner"))
+            {
+                <div class="control-group">
+                    <InputText class="form-input" placeholder="Street" style="border-bottom: 5px;" @bind-Value="Address.Street" @onclick=HideResult />
+                    <InputText class="form-input" placeholder="Number" @bind-Value="Address.Number" @onclick=HideResult />
+                </div>
+                <div class="control-group">
                     <InputText class="form-input" placeholder="City" style="border-bottom: 5px;" @bind-Value="User.City" @onclick=HideResult />
-                }
-
-                @if (AccountType.Equals("PageOwner"))
-                {
-                    <div class="control-group">
-                        <InputText class="form-input" placeholder="Street" style="border-bottom: 5px;" @bind-Value="Address.Street" @onclick=HideResult />
-                        <InputText class="form-input" placeholder="Number" @bind-Value="Address.Number" @onclick=HideResult />
-                    </div>
-                    <div class="control-group">
-                        <InputText class="form-input" placeholder="City" style="border-bottom: 5px;" @bind-Value="User.City" @onclick=HideResult />
-                    </div>
-                }
-
+                </div>
+            }
+                
+            @if (IsEditForm)
+            {
+                <input type="submit" style="margin-top: 0px" class="form-button" value="Edit Account"/>
+            }
+            else
+            {
                 <input type="submit" style="margin-top: 0px" class="form-button" value="Create Account"/>
-                <div style="padding: 20px">@((MarkupString) resultInformation)</div>
-            </EditForm>
-        </div>
-    </div>
-}
+            }
+            <div style="padding: 20px">@((MarkupString) resultInformation)</div>
+        </EditForm>
+    }
+    else
+    {
+        <EditForm Model="@User" OnValidSubmit="CreateAccount">
+            @if (AccountType.Equals("RegularUser"))
+            {
+                <div class="control-group">
+                    <InputText class="form-input" placeholder="First Name" @bind-Value="firstName" @onclick=HideResult />
+                    <InputText class="form-input" placeholder="Last Name" @bind-Value="lastName" @onclick=HideResult />
+                </div>
+            }
 
-else
+            @if (AccountType.Equals("PageOwner"))
+            {
+                <InputText class="form-input" placeholder="Name" @bind-Value="User.Name" @onclick=HideResult />
+            }
+
+            <InputText class="form-input" placeholder="Email" @bind-Value="User.Email" @onclick=HideResult />
+            <InputText type="password" class="form-input" placeholder="Password"@bind-Value="User.Password" @onclick=HideResult />
+            <InputText type="password" class="form-input" placeholder="Password Confirmation" style="border-bottom: 5px;" @bind-Value="passwordConfirmation" @onclick=HideResult />
+
+            @if (AccountType.Equals("RegularUser"))
+            {
+                <InputText class="form-input" placeholder="City" style="border-bottom: 5px;" @bind-Value="User.City" @onclick=HideResult />
+            }
+
+            @if (AccountType.Equals("PageOwner"))
+            {
+                <div class="control-group">
+                    <InputText class="form-input" placeholder="Street" style="border-bottom: 5px;" @bind-Value="Address.Street" @onclick=HideResult />
+                    <InputText class="form-input" placeholder="Number" @bind-Value="Address.Number" @onclick=HideResult />
+                </div>
+                <div class="control-group">
+                    <InputText class="form-input" placeholder="City" style="border-bottom: 5px;" @bind-Value="User.City" @onclick=HideResult />
+                </div>
+            }
+
+            @if (IsEditForm)
+            {
+                <input type="submit" style="margin-top: 0px" class="form-button" value="Edit Account"/>
+            }
+            else
+            {
+                <input type="submit" style="margin-top: 0px" class="form-button" value="Create Account"/>
+            }
+            <div style="padding: 20px">@((MarkupString) resultInformation)</div>
+        </EditForm>
+    }
+</div>
+</div>
+
+@if (IsEditForm)
 {
     <div class="login-popup">
-        <h2>Registration</h2>
+        <h2>Edit Account</h2>
         <div class="content">
             <EditForm Model="@User" OnValidSubmit="EditAccount">
                 <InputText class="form-input" placeholder="Description" @bind-Value="User.Description" @onclick=HideResult />
 
-                <input type="submit" style="margin-top: 0px" class="form-button" value="Create Account"/>
+                <input type="submit" style="margin-top: 0px" class="form-button" value="Edit Account"/>
                 <div style="padding: 20px">@((MarkupString) resultInformation)</div>
             </EditForm>
         </div>
@@ -95,7 +159,10 @@ else
         }
         else
         {
-            Address = new Address();
+            if (AccountType.Equals("RegularUser"))
+                Address = null;
+            else
+                Address = new Address();
             User = new User()
             {
                 Address = Address
@@ -103,21 +170,23 @@ else
         }
     }
 
-    private void CreateAccount()
+    private async void CreateAccount()
     {
         if (AccountType.Equals("RegularUser"))
             User.Name = firstName + " " + lastName;
 
-
-        if (UserManger.AddNewUser(User).IsCompletedSuccessfully)
+        HttpStatusCode status = await UserManger.AddNewUser(User);
+        if (status == HttpStatusCode.OK || status == HttpStatusCode.Created)
             resultInformation = "<span class='info-message' style='color:green;'>Account successfully created!</span>";
         else
             resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
     }
 
-    private void EditAccount()
+    private async void EditAccount()
     {
-        if (UserManger.EditUser(User).IsCompletedSuccessfully)
+        HttpStatusCode status = await UserManger.EditUser(User);
+        
+        if (status == HttpStatusCode.OK)
             resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
         else
             resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";

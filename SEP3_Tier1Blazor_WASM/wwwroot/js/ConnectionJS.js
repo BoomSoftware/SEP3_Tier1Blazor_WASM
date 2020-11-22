@@ -1,4 +1,4 @@
-﻿﻿﻿let stompClient = null;
+﻿let stompClient = null;
 let Blazor;
 
 function connect(dotnet) {
@@ -25,6 +25,19 @@ function disconnect() {
 function sendName(name) {
     stompClient.send("/app/hello", {}, JSON.stringify({'name': name}));
     console.log("Message sent");
+}
+
+function sendFriendRequest(requesterID, friendID){
+    stompClient.send("/app/friend", {}, JSON.stringify({'requester' : requesterID, 'friend' : friendID}));
+    console.log("Friend request sent");
+}
+
+function showFriendRequest(requesterShortVersion){
+    console.log(requesterShortVersion);
+    Blazor.invokeMethodAsync('ShowFriendRequest', requesterShortVersion)
+        .then(data => {
+            console.log(data);
+        });
 }
 
 function showGreeting(message) {
