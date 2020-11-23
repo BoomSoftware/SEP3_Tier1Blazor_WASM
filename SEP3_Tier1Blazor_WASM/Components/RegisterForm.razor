@@ -170,26 +170,29 @@
         }
     }
 
-    private async void CreateAccount()
+    private async Task CreateAccount()
     {
         if (AccountType.Equals("RegularUser"))
             User.Name = firstName + " " + lastName;
 
-        HttpStatusCode status = await UserManger.AddNewUser(User);
-        if (status == HttpStatusCode.OK || status == HttpStatusCode.Created)
+        bool result = await UserManger.AddNewUser(User);
+
+        if (result)
             resultInformation = "<span class='info-message' style='color:green;'>Account successfully created!</span>";
         else
             resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
+        StateHasChanged();
+
     }
 
     private async void EditAccount()
     {
-        HttpStatusCode status = await UserManger.EditUser(User);
-        
-        if (status == HttpStatusCode.OK)
-            resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
-        else
-            resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
+        // HttpStatusCode status = await UserManger.EditUser(User);
+        //
+        // if (status == HttpStatusCode.OK)
+        //     resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
+        // else
+        //     resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
     }
 
     private void HideResult()

@@ -4,7 +4,6 @@
 
 
 <div class="container-fluid">
- <WallNavBar/>
     <div class="main">
         <div class="row h-100 justify-content-md-center">
             <div class="col-lg-5 col-md-12 my-auto">
@@ -39,7 +38,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        user = await UserManger.GetUser(id);
+        //user = await UserManger.GetUser(id);
 
     // avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
     // bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));

@@ -1,7 +1,10 @@
 ﻿@inject IUserManger UserManger
 @inject NavigationManager NavigationManager
-@inject IJSRuntime JS;
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider Authentication
+@inject IFileUpload FileUpload
 
+@attribute [Authorize]
 @page "/profile/{UserArgument}/"
 
 @using SEP3_Tier1Blazor_WASM.Data
@@ -10,7 +13,11 @@
 @if (user != null)
 {
     <div class="container">
-        <header style="background-image: url(@bgSrc)"/>
+        <header style="background-image: url(@bgSrc)">
+            <AuthorizeView Resource="@id" Policy="CurrentLogged">
+                <InputFile OnChange="OnInputFileChanged"/>
+            </AuthorizeView>
+        </header>
         <main>
             <div class="row">
                 <div class="left col-lg-4">
@@ -47,8 +54,13 @@
                         <li>Liked Posts</li>
                         <li>About</li>
                     </ul>
+
                     @* <span class="follow" @onclick=OnAddNewFriend>Add Friend</span> *@
-                    <span class="follow" @onclick=OnDeleteAccount>Delete Account</span>
+                    <AuthorizeView Resource="@id" Policy="CurrentLogged">
+                        <span class="follow" @onclick=OnDeleteAccount>Delete Account</span>
+                    </AuthorizeView>
+                    
+                   
                     @* <span class="follow" @onclick=OnReportUser>Report User</span> *@
                     <div class="row gallery">
                         @*                           @foreach(int postId in user.PostIds) *@
@@ -85,16 +97,9 @@
         if (tempUser.Length == 2)
             id = Int32.Parse(tempUser[1]);
 
-        user = await UserManger.GetUser(id);
-
-        if (user.Avatar == null)
-            avatarSrc = "/img/default-avatar.png";
-        else
+        user = await UserManger.GetUser(StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync()),id);
+        
             avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
-
-        if (user.ProfileBackground == null)
-            bgSrc = "/img/default-bg.jpg";
-        else
             bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
     }
 
@@ -110,30 +115,43 @@
         }
     }
 
-    private void OnAddNewFriend()
+    // private void OnAddNewFriend()
+    // {
+    //     if (JS.InvokeVoidAsync("sendName", new object[] {((UserManagerRest) UserManger).CurrentLogged.UserId, id}).IsCompletedSuccessfully)
+    //     {
+    //         //request sent successfully
+    //     }
+    //
+    //     else
+    //     {
+    //         //server error
+    //     }
+    // }
+    //
+    // private void OnReportUser()
+    // {
+    //     if (UserManger.ReportUser(id).IsCompletedSuccessfully)
+    //     {
+    // //display successful message
+    //     }
+    //
+    //     else
+    //     {
+    // //display error connection message
+    //     }
+    
+
+    private async Task OnInputFileChanged(IFileListEntry[] files)
     {
-        if (JS.InvokeVoidAsync("sendName", new object[] {((UserManagerRest) UserManger).CurrentLogged.UserId, id}).IsCompletedSuccessfully)
-        {
-            //request sent successfully
-        }
+        Console.WriteLine("+++++++++++++++++++++++++++++ size: " + files.FirstOrDefault().Data.Length);
 
-        else
-        {
-            //server error
-        }
-    }
-
-    private void OnReportUser()
-    {
-        if (UserManger.ReportUser(id).IsCompletedSuccessfully)
-        {
-    //display successful message
-        }
-
-        else
-        {
-    //display error connection message
-        }
+        User editedUser = new User();
+        
+        editedUser.Id = id;
+        editedUser.ProfileBackground = await FileUpload.ConvertFile(files.FirstOrDefault());
+        
+        await UserManger.EditUser(editedUser, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
+        StateHasChanged();
     }
     
 

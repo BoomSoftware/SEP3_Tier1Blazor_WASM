@@ -3,33 +3,33 @@
 
 @page "/"
 <div class="container-fluid">
-    <LoginBar/>
-    <div class="main" @onmousemove="RotateBox">
-        <div class="row h-100 justify-content-md-center">
-            <div class="col-lg-5 col-md-12 my-auto">
-                <h1 style="@perspectiveCss">
-                    Start your adventure with fitness
-                </h1>
-                <p>Plan your training, share your achievements with friends, arrange sessions together. ShapeApp gives you all these possibilities as well as many others. Do not hesitate and join a fitness society you have never known before!</p>
-                <div class="register-button-box">
-                    <button class="register-button" @onclick=OpenRegisterPage>Register now</button>
-                </div>
+            <LoginBar/>
+            <div class="main" @onmousemove="RotateBox">
+                <div class="row h-100 justify-content-md-center">
+                    <div class="col-lg-5 col-md-12 my-auto">
+                        <h1 style="@perspectiveCss">
+                            Start your adventure with fitness
+                        </h1>
+                        <p>Plan your training, share your achievements with friends, arrange sessions together. ShapeApp gives you all these possibilities as well as many others. Do not hesitate and join a fitness society you have never known before!</p>
+                        <div class="register-button-box">
+                            <button class="register-button" @onclick=OpenRegisterPage>Register now</button>
+                        </div>
 
-            </div>
-            <div class="col-lg-5 col-md-12 text-center">
-                <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
-                    <ChatSvg/>
-                </Animate>
-                <form @onsubmit="SendMessageAsync">
-                        Message: <input @bind="@message" />
-                        <button type="submit">Send</button>
-                    </form>
-                
-                    <pre>@log</pre>
+                    </div>
+                    <div class="col-lg-5 col-md-12 text-center">
+                        <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
+                            <ChatSvg/>
+                        </Animate>
+                        <form @onsubmit="SendMessageAsync">
+                            Message: <input @bind="@message"/>
+                            <button type="submit">Send</button>
+                        </form>
+
+                        <pre>@log</pre>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
 @code{
     
@@ -81,5 +81,6 @@
     {
         NavigationManager.NavigateTo("/registration");
     }
+    
 
 }

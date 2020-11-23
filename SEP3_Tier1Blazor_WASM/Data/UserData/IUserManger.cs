@@ -7,15 +7,15 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
 {
     public interface IUserManger
     {
-        Task<HttpStatusCode> AddNewUser(User user);
+        Task<bool> AddNewUser(User user);
         Task RemoveUser(int id);
-        Task<HttpStatusCode> EditUser(User editedUser);
+        Task EditUser(User editedUser, UserShortVersion currentLogged);
 
-        Task<User> GetUser(int id);
+        Task<User> GetUser(int senderId, int receiverId);
 
-        Task Login (Login login);
+        Task<UserShortVersion> Login (Login login);
 
-        Task ReportUser(int id);
+        Task ReportUser(int senderId, int receiverId);
 
         Task SetAvatar(byte[] avatar);
 

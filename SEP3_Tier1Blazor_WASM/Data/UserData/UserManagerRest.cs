@@ -14,7 +14,6 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
 {
     public class UserManagerRest : IUserManger
     {
-        public UserShortVersion CurrentLogged { get; private set; }
         private HttpClient client;
         private string uri;
         private IList<User> users;
@@ -27,7 +26,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
         }
 
 
-        public async Task<HttpStatusCode> AddNewUser(User user)
+        public async Task<bool> AddNewUser(User user)
         {
             string userSerialized = JsonSerializer.Serialize(user);
             StringContent content = new StringContent(
@@ -36,10 +35,10 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
                 "Application/json"
             );
             HttpResponseMessage response = await client.PostAsync(uri, content);
-
             Console.WriteLine("**************** Status code add user: " + response.StatusCode);
-            
-            return response.StatusCode;
+            if (response.IsSuccessStatusCode)
+                return true;
+            return false;
         }
 
         public async Task RemoveUser(int id)
@@ -47,9 +46,9 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
            await client.DeleteAsync($"{uri}/{id}");
         }
 
-        public async Task<HttpStatusCode> EditUser(User editedUser)
+        public async Task EditUser(User editedUser, UserShortVersion currentLogged)
         {
-            if (editedUser.Avatar == CurrentLogged.Avatar)
+            if (editedUser.Avatar == currentLogged.Avatar)
                 editedUser.Avatar = null;
 
             string userSerialized = JsonSerializer.Serialize(editedUser);
@@ -59,13 +58,14 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
                 "Application/json");
 
             HttpResponseMessage response = await client.PutAsync($"{uri}/{editedUser.Id}", content);
-            return response.StatusCode;
+
+            Console.WriteLine("###################### EDIT USER SENT response:" + response.StatusCode);
         }
 
-        public async Task<User> GetUser(int id)
+        public async Task<User> GetUser(int senderId, int receiverId)
         {
             
-            string result = await client.GetStringAsync($"{uri}?senderId={CurrentLogged.UserId}&receiverId={id}");
+            string result = await client.GetStringAsync($"{uri}?senderId={senderId}&receiverId={receiverId}");
             Console.WriteLine(result);
             
             User user = JsonSerializer.Deserialize<User>(result);
@@ -73,39 +73,26 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
             return user;
         }
 
-        public async Task Login(Login login)
+        public async Task<UserShortVersion> Login(Login login)
         {
-            string loginSerialized = JsonSerializer.Serialize(login);
+            HttpResponseMessage result =
+                await client.GetAsync($"{uri}/login?email={login.Email}&password={login.Password}");
             
-            StringContent content = new StringContent(
-                loginSerialized,
-                Encoding.UTF8,
-                "Application/json");
-            
-            HttpResponseMessage result = await client.GetAsync($"{uri}/login?email={login.Email}&password={login.Password}");
-
-            Console.WriteLine("********************* Status code: " + result.StatusCode);
-            if (result.IsSuccessStatusCode) {
+            if (result.IsSuccessStatusCode)
+            {
                 string responseString = await result.Content.ReadAsStringAsync();
-                if (responseString == null || responseString.Equals(""))
-                    CurrentLogged = null;
-                else
-                {
-                    CurrentLogged = JsonSerializer.Deserialize<UserShortVersion>(responseString);
-                }
-                   
+                return JsonSerializer.Deserialize<UserShortVersion>(responseString);
             }
-            else {
-                CurrentLogged = null;
-            }
+
+            return null;
         }
 
-        public async Task ReportUser(int id)
+        public async Task ReportUser(int senderId, int receiverId)
         {
             UserAction userAction = new UserAction()
             {
-                senderId = CurrentLogged.UserId,
-                receiverId = id,
+                senderId = senderId,
+                receiverId = receiverId,
                 actionType = UserActionTypes.USER_REPORT
             };
             

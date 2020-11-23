@@ -1,4 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Linq;
+using System.Text;
+using Microsoft.AspNetCore.Components.Authorization;
+using SEP3_Tier1Blazor_WASM.Models;
 
 namespace SEP3_Tier1Blazor_WASM.Shared
 {
@@ -21,6 +25,22 @@ namespace SEP3_Tier1Blazor_WASM.Shared
 
             name = stringBuilder.ToString();
             return name;
+        }
+
+        public static UserShortVersion GetLoggedUser(AuthenticationState state)
+        {
+            return new UserShortVersion
+            {
+                UserId = Int32.Parse(state.User.Claims.First(c => c.Type.Equals("Id")).Value),
+                AccountType = state.User.Claims.First(c => c.Type.Equals("AccountType")).Value,
+                Avatar = Convert.FromBase64String(state.User.Claims.First(c => c.Type.Equals("Avatar")).Value),
+                UserFullName = state.User.Claims.First(c => c.Type.Equals("Name")).Value
+            };
+        }
+
+        public static int GetLoggedUserId(AuthenticationState state)
+        {
+            return Int32.Parse(state.User.Claims.First(c => c.Type.Equals("Id")).Value);
         }
     }
 }

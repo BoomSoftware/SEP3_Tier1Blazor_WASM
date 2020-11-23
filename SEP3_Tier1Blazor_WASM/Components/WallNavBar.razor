@@ -4,8 +4,9 @@
 @using SEP3_Tier1Blazor_WASM.Models
 @using System.ComponentModel
 @using System.Text.Json
+@using SEP3_Tier1Blazor_WASM.Authentication
 @inject NavigationManager NavigationManager
-@inject IUserManger UserManager;
+@inject AuthenticationStateProvider Authentication
 
 <nav class="mb-1 navbar navbar-expand-lg navbar-dark secondary-color lighten-1">
     <a class="navbar-brand" href="#">Navbar</a>
@@ -23,12 +24,12 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#">Notifications <span style="color: red">@notifications</span></a>
-                 <div class="@NotificationsCssClass">
-                     @foreach (NotificationModel notificationModel in notificationsModels)
-                     {
-                         <Notification Model="@notificationModel"/>
-                     }
-                 </div>
+                <div class="@NotificationsCssClass">
+                    @*                     @foreach (NotificationModel notificationModel in notificationsModels) *@
+                    @*                     { *@
+                    @*                         <Notification Model="@notificationModel"/> *@
+                    @*                     } *@
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#">Pricing</a>
@@ -48,22 +49,26 @@
         <ul class="navbar-nav ml-auto nav-flex-icons">
             <li class="nav-item">
                 <a class="nav-link waves-effect waves-light">
-                    1
                     <i class="fas fa-envelope"></i>
                 </a>
             </li>
-            <li class="nav-item avatar dropdown">
-                <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink-55" data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false">
-                    <img src=@avatarSrc class="rounded-circle z-depth-0"
-                         alt="avatar image" width="100" height="100" @onclick=ToggleAvatarMenu>
-                </a>
-                <div class="@AvatarMenuCssClass"
-                     aria-labelledby="navbarDropdownMenuLink-55">
-                     <a class="dropdown-item" @onclick=OpenProfileView>Profile</a>
-                    <a class="dropdown-item" @onclick=OpenEditAccountView>Edit Account</a>
-                </div>
-            </li>
+            @if (avatarSrc != null)
+            {
+                <li class="nav-item avatar dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink-55" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        <img src=@avatarSrc class="rounded-circle z-depth-0"
+                             alt="avatar image" width="100" height="100" @onclick=ToggleAvatarMenu>
+                    </a>
+                    <div class="@AvatarMenuCssClass"
+                         aria-labelledby="navbarDropdownMenuLink-55">
+                        <a class="dropdown-item" @onclick=OpenProfileView>Profile</a>
+                        <a class="dropdown-item" @onclick=OpenEditAccountView>Edit Account</a>
+                        <a class="dropdown-item" @onclick=Logout>Logout</a>
+                    </div>
+                </li>
+            }
+
         </ul>
     </div>
 </nav>
@@ -76,7 +81,8 @@
     private string avatarSrc;
     private int notifications;
     private IList<NotificationModel> notificationsModels;
-    
+    private UserShortVersion loggedUser;
+
     bool collapseNavMenu = true;
     bool collapseAvatarMenu = false;
     bool collapseNotification = false;
@@ -89,20 +95,18 @@
     string NavMenuCssClass => baseMenuClass + (collapseNavMenu ? " collapse" : "");
     string AvatarMenuCssClass => baseAvatarMenuClass + (collapseAvatarMenu ? " show" : "");
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        if (loggedUser == null)
+            loggedUser = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+
         notificationsModels = new List<NotificationModel>();
-        
-        if (((UserManagerRest) UserManager).CurrentLogged.Avatar == null)
-            avatarSrc = "/img/default-avatar.png";
-        else
-            avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(((UserManagerRest) UserManager).CurrentLogged.Avatar));
-        
+        avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(loggedUser.Avatar));
+        StateHasChanged();
     }
 
     private async void SearchUsers()
     {
-
         if (users != null && users.Count > 0)
             searchVisible = true;
         StateHasChanged();
@@ -113,7 +117,7 @@
     {
         NavigationManager.NavigateTo("profile/" + StaticFunctions.GetUserUri(user.Name) + "." + user.Id + "/");
     }
-    
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
@@ -126,27 +130,33 @@
 
     private void OpenEditAccountView()
     {
-        NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(((UserManagerRest) UserManager).CurrentLogged.UserFullName)}.{((UserManagerRest) UserManager).CurrentLogged.UserId}/edit");
+        NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/edit");
     }
 
     private void OpenProfileView()
     {
-        NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(((UserManagerRest) UserManager).CurrentLogged.UserFullName)}.{((UserManagerRest) UserManager).CurrentLogged.UserId}/");
+        NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/");
     }
-    
+
 
     [JSInvokable("ShowFriendRequest")]
     private void ShowFriendRequest(string userShortVersion)
     {
         notifications++;
         UserShortVersion user = JsonSerializer.Deserialize<UserShortVersion>(userShortVersion);
-        
+
         notificationsModels.Add(new NotificationModel()
         {
             Content = $"{user.UserFullName} wants to be your friend",
             NotificationOwner = user,
             Type = NotificationType.FriendRequest
         });
+    }
+
+    private void Logout()
+    {
+        ((CustomAuthenticationStateProvider) Authentication).Logout();
+        NavigationManager.NavigateTo("/");
     }
 
 }
