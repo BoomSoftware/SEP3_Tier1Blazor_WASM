@@ -1,5 +1,6 @@
 ﻿@inject IUserManger UserManger
-
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider Authentication
 @page "/profile/{UserArgument}/edit/"
 
 
@@ -7,12 +8,17 @@
     <div class="main">
         <div class="row h-100 justify-content-md-center">
             <div class="col-lg-5 col-md-12 my-auto">
-                <h1 style="font-size: 38px">Select type of the account:</h1>
+
+
+                
+
+                <h1 style="font-size: 38px">Update Your Information</h1>
+                
                 <button class="action-button purple @generalInfoPressedButton" @onclick=ShowGeneralInformation>
                     <img src="/img/user.svg">
                 </button>
-                <button class="action-button purple @moreInfoPressedButton" @onclick=ShowMoreInformation>
-                    <img src="/img/company.svg">
+                <button class="action-button purple @moreInfoPressedButton" @onclick=ShowPasswordFrom>
+                    <img src="/img/password.svg">
                 </button>
             </div>
             <div class="col-lg-5 col-md-12 text-center">
@@ -29,35 +35,61 @@
     [Parameter]
     public string UserArgument { get; set; }
 
+    [CascadingParameter]
+    protected Task<AuthenticationState> AuthState { get; set; }
+
     private int id;
     private User user;
     private bool isPageOwer;
+    private string avatarSrc;
     private RenderFragment registerFormRender;
     private string generalInfoPressedButton;
     private string moreInfoPressedButton;
+    private string[] tempUser;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        ClaimsPrincipal auth = (await AuthState).User;
+
+        int authId = int.Parse(auth.Claims.First(claim => claim.Type.Equals("Id")).Value);
+
+        if (authId != id)
+        {
+            NavigateToOwnEdit();
+        }
+    }
+
 
     protected override async Task OnInitializedAsync()
     {
-        //user = await UserManger.GetUser(id);
+        ClaimsPrincipal auth = (await AuthState).User;
 
-    // avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
-    // bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
-    }
+        int authId = int.Parse(auth.Claims.First(claim => claim.Type.Equals("Id")).Value);
 
-    protected override async Task OnParametersSetAsync()
-    {
-        string[] tempUser = UserArgument.Split('.');
+        if (authId != id)
+        {
+            NavigateToOwnEdit();
+        }
+
+
+        tempUser = UserArgument.Split('.');
         if (tempUser.Length == 3)
         {
-            id = Int32.Parse(tempUser[2]);
+            id = int.Parse(tempUser[2]);
             isPageOwer = false;
         }
 
         if (tempUser.Length == 2)
         {
-            id = Int32.Parse(tempUser[1]);
+            id = int.Parse(tempUser[1]);
             isPageOwer = true;
         }
+
+        user = await UserManger.GetUser(StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync()), id);
+        avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
+
+
+        ShowGeneralInformation();
     }
 
     private void ShowGeneralInformation()
@@ -65,7 +97,7 @@
         if (!isPageOwer)
         {
             registerFormRender = @<Animate Animation="Animations.ZoomIn">
-                                     <RegisterForm AccountType="RegularUser"/>
+                                     <RegisterForm AccountType="RegularUser" EditedUser="user" IsEditForm="true"/>
                                  </Animate>;
             generalInfoPressedButton = "action-button-pressed";
             moreInfoPressedButton = "";
@@ -75,19 +107,26 @@
         else
         {
             registerFormRender = @<Animate Animation="Animations.ZoomIn">
-                                     <RegisterForm AccountType="PageOwner"/>
+                                     <RegisterForm AccountType="PageOwner" EditedUser="user" IsEditForm="true"/>
                                  </Animate>;
             generalInfoPressedButton = "action-button-pressed";
             moreInfoPressedButton = "";
         }
     }
 
-    private void ShowMoreInformation()
+    private void ShowPasswordFrom()
     {
         registerFormRender = @<Animate Animation="Animations.ZoomIn">
-                                     <RegisterForm EditedUser="@user" IsEditForm="true"/>
-                                 </Animate>;
-            generalInfoPressedButton = "action-button-pressed";
-            moreInfoPressedButton = "";
+                                 <RegisterForm AccountType="RegularUser" EditedUser="user" IsEditForm="false" IsEditPassword="true"/>
+                             </Animate>;
+        moreInfoPressedButton = "action-button-pressed";
+        generalInfoPressedButton = "";
     }
+
+    private async void NavigateToOwnEdit()
+    {
+        UserShortVersion user = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+        NavigationManager.NavigateTo($"/profile/{StaticFunctions.GetUserUri(user.UserFullName)}.{StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync())}/edit");
+    }
+
 }

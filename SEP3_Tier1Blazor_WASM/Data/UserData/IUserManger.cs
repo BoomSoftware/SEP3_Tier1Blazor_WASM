@@ -9,7 +9,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
     {
         Task<bool> AddNewUser(User user);
         Task RemoveUser(int id);
-        Task EditUser(User editedUser, UserShortVersion currentLogged);
+        Task<bool> EditUser(User editedUser, UserShortVersion currentLogged);
 
         Task<User> GetUser(int senderId, int receiverId);
 

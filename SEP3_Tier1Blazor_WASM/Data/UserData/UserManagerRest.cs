@@ -46,7 +46,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
            await client.DeleteAsync($"{uri}/{id}");
         }
 
-        public async Task EditUser(User editedUser, UserShortVersion currentLogged)
+        public async Task<bool> EditUser(User editedUser, UserShortVersion currentLogged)
         {
             if (editedUser.Avatar == currentLogged.Avatar)
                 editedUser.Avatar = null;
@@ -58,8 +58,10 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
                 "Application/json");
 
             HttpResponseMessage response = await client.PutAsync($"{uri}/{editedUser.Id}", content);
-
             Console.WriteLine("###################### EDIT USER SENT response:" + response.StatusCode);
+            if (response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.BadRequest)
+                return true;
+            return false;
         }
 
         public async Task<User> GetUser(int senderId, int receiverId)
