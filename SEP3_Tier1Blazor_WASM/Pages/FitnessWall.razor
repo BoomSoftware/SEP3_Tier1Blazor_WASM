@@ -1,5 +1,8 @@
 ﻿@page "/FitnessWall"
 @attribute [Authorize]
+@* @inject IJSRuntime JS; *@
+@inject AuthenticationStateProvider Authentication
+
 
 <div class="container-fluid">
    <PostCreator OnPostCreated="NewPostCreated" />
@@ -13,6 +16,9 @@
 
     protected async override Task OnInitializedAsync()
     {
+        // var dotNetReference = DotNetObjectReference.Create(this);
+        // await JS.InvokeVoidAsync("connect", dotNetReference, StaticFunctions.GetLoggedUserId( await Authentication.GetAuthenticationStateAsync()));
+        
         //download posts
         posts = new List<PostData>();
         

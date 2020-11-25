@@ -1,15 +1,19 @@
 ﻿let stompClient = null;
 let Blazor;
 
-function connect(dotnet) {
+function connect(dotnet, id) {
     Blazor = dotnet;
-    console.log("Hello")
-    var socket = new SockJS('http://localhost:8080/gs-guide-websocket/');
+    console.log("User connected: " + id)
+    var socket = new SockJS('http://localhost:8080/shapeapp');
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
-        stompClient.subscribe('/topic/greetings', function (greeting) {
-            showGreeting(JSON.parse(greeting.body).content);
+        stompClient.subscribe('/user/'+id+'/queue/notifications', function (notification) {
+            showGreeting(JSON.parse(notification.body).content);
+        });
+        
+        stompClient.subscribe('/queue/errors/' + id, function (error){
+            showGreeting(JSON.parse(error.body).content);
         });
     });
 }
@@ -27,8 +31,9 @@ function sendName(name) {
     console.log("Message sent");
 }
 
-function sendFriendRequest(requesterID, friendID){
-    stompClient.send("/app/friend", {}, JSON.stringify({'requester' : requesterID, 'friend' : friendID}));
+function sendFriendRequest(userAction){
+    console.log(stompClient)
+    stompClient.send("/app/notifications", {}, userAction);
     console.log("Friend request sent");
 }
 
@@ -42,9 +47,5 @@ function showFriendRequest(requesterShortVersion){
 
 function showGreeting(message) {
     console.log(message);
-    Blazor.invokeMethodAsync('AddText', message)
-        .then(data => {
-            console.log(data);
-        });
 }
     

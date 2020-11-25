@@ -9,6 +9,7 @@
 
 @using SEP3_Tier1Blazor_WASM.Data
 @using SEP3_Tier1Blazor_WASM.Data.UserData
+@using System.Text.Json
 
 @if (user != null)
 {
@@ -54,11 +55,25 @@
                         <li>Liked Posts</li>
                         <li>About</li>
                     </ul>
+                    
+                    @if (user.UserStatus[0]){
+                        <span class="follow" @onclick=OnCancelFriendship>Cancel friendship</span>
+                    }
+                    @if (user.UserStatus[1]){
+                        <span class="follow" @onclick=OnConfirmFriendship>Confirm friendship</span>
+                    }
+                    else {
+                         <span class="follow" @onclick=OnAddNewFriend>Add Friend</span>
+                    }
 
-                    @* <span class="follow" @onclick=OnAddNewFriend>Add Friend</span> *@
+
+
+
                     <AuthorizeView Resource="@id" Policy="CurrentLogged">
                         <span class="follow" @onclick=OnDeleteAccount>Delete Account</span>
                     </AuthorizeView>
+                    
+                    
                     
                    
                     @* <span class="follow" @onclick=OnReportUser>Report User</span> *@
@@ -115,18 +130,15 @@
         }
     }
 
-    // private void OnAddNewFriend()
-    // {
-    //     if (JS.InvokeVoidAsync("sendName", new object[] {((UserManagerRest) UserManger).CurrentLogged.UserId, id}).IsCompletedSuccessfully)
-    //     {
-    //         //request sent successfully
-    //     }
-    //
-    //     else
-    //     {
-    //         //server error
-    //     }
-    // }
+    private async Task OnAddNewFriend()
+    {
+        UserShortVersion currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+        
+        UserAction friendRequest = new UserAction{ActionType = UserActionTypes.USER_FRIEND_REQUEST_SEND.ToString(), ReceiverId = user.Id, SenderId = currentLogged.UserId, SenderName = currentLogged.UserFullName, Value = true};
+        string serializedFriendRequest = JsonSerializer.Serialize(friendRequest);
+        await JS.InvokeVoidAsync("sendFriendRequest", serializedFriendRequest);
+        
+    }
     //
     // private void OnReportUser()
     // {
@@ -154,6 +166,15 @@
         StateHasChanged();
     }
     
+
+    private async Task OnCancelFriendship()
+    {
+        
+    }
+
+    private async Task OnConfirmFriendship(){
+        
+    }
 
 
 

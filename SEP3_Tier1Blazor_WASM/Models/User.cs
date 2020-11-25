@@ -38,6 +38,8 @@ namespace SEP3_Tier1Blazor_WASM.Models
         [JsonPropertyName("address")]
         public Address Address { get; set; }
 
+        [JsonPropertyName("userStatus")] 
+        public bool[] UserStatus { get; set; }
 
         public override string ToString()
         {

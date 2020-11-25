@@ -1,5 +1,4 @@
 ﻿@inject NavigationManager NavigationManager
-@inject IJSRuntime JS;
 
 @page "/"
 <div class="container-fluid">
@@ -37,15 +36,12 @@
     
     protected override async Task OnInitializedAsync()
     {
-        var dotNetReference = DotNetObjectReference.Create(this);
-        
-        await JS.InvokeVoidAsync("connect", dotNetReference);
     }
     
     async Task SendMessageAsync()
     {
 
-        await JS.InvokeVoidAsync("sendName", message);
+       // await JS.InvokeVoidAsync("sendName", message);
     }
 
     [JSInvokable("AddText")]

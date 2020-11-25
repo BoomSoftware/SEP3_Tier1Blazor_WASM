@@ -7,6 +7,7 @@
 @using SEP3_Tier1Blazor_WASM.Authentication
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider Authentication
+@inject IJSRuntime JS;
 
 <nav class="mb-1 navbar navbar-expand-lg navbar-dark secondary-color lighten-1">
     <a class="navbar-brand" href="#">Navbar</a>
@@ -98,10 +99,17 @@
     protected override async Task OnInitializedAsync()
     {
         if (loggedUser == null)
-            loggedUser = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+        {
+             loggedUser = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+             var dotNetReference = DotNetObjectReference.Create(this);
+             await JS.InvokeVoidAsync("connect", dotNetReference,loggedUser.UserId);
+        }
+           
 
         notificationsModels = new List<NotificationModel>();
         avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(loggedUser.Avatar));
+
+
         StateHasChanged();
     }
 

@@ -92,9 +92,9 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
         {
             UserAction userAction = new UserAction()
             {
-                senderId = senderId,
-                receiverId = receiverId,
-                actionType = UserActionTypes.USER_REPORT
+                SenderId = senderId,
+                ReceiverId = receiverId,
+                ActionType = UserActionTypes.USER_REPORT.ToString()
             };
             
             string idSerialized = JsonSerializer.Serialize(userAction);

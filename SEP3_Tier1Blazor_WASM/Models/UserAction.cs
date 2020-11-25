@@ -1,13 +1,20 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Models
 {
     public class UserAction
     {
-        public int senderId { get; set; }
-        public int receiverId { get; set; }
-        public UserActionTypes actionType { get; set; }
-        public Object value { get; set; }
+        [JsonPropertyName("senderId")]
+        public int SenderId { get; set; }
+        [JsonPropertyName("receiverId")]
+        public int ReceiverId { get; set; }
+        [JsonPropertyName("senderName")]
+        public string SenderName { get; set; }
+        [JsonPropertyName("actionType")]
+        public string ActionType { get; set; }
+        [JsonPropertyName("value")]
+        public Object Value { get; set; }
     }
 }
