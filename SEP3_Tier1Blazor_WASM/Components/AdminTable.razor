@@ -1,0 +1,118 @@
+﻿@using System.Collections
+@inject IAdminManager AdminManager
+@inject IUserManger UserManger
+@inject NavigationManager NavigationManager
+
+
+@if (usersToShow == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else if (!usersToShow.Any())
+{
+    <p>
+        <em>No users</em>
+    </p>
+}
+else
+{
+    <div class="table-responsive">
+         <table class="table table-fixed">
+             <thead>
+             <tr>
+                 <th scope="col" class="col-3">Avatar</th>
+                 <th scope="col" class="col-3">ID</th>
+                 <th scope="col" class="col-3">Name</th>
+                 <th scope="col" class="col-3">Delete</th>
+             </tr>
+             </thead>
+             <tbody>
+             @foreach (var user in usersToShow)
+             {
+                 <tr>
+                     <td scope="row" class="col-3" @onclick="@(() => OpenUserProfile(user.UserFullName, user.UserId))">
+                         <img src="@ConvertUserAvatar(user.Avatar)" width="20" height="20" alt="avatar">
+                     </td>
+                     <td class="col-3">@user.UserId</td>
+                     <td class="col-3">@user.UserFullName</td>
+                     <td class="col-3">
+                         <button @onclick="@(() => RemoveUser(user.UserId))">
+                             <i class="oi oi-trash" style="color: red"/>
+                         </button>
+                     </td>
+                 </tr>
+             }
+             </tbody>
+         </table>
+          @if (TotalElementsNumber > currentElementId)
+             {
+                 <button @onclick=ShowMoreElements>Show More</button>
+             } 
+                </div>
+}
+
+@code {
+
+    [Parameter]
+    public int TotalElementsNumber { get; set; }
+
+    [Parameter]
+    public int PageElementsNumber { get; set; }
+
+    private IList<UserShortVersion> users;
+    private IList<UserShortVersion> usersToShow;
+    
+    private int currentElementId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await AdminManager.GetUsers(PageElementsNumber, currentElementId);
+        usersToShow = users;
+
+        currentElementId++;
+    }
+
+    private async Task RemoveUser(int id)
+    {
+        try
+        {
+            await UserManger.RemoveUser(id);
+            usersToShow.Remove(usersToShow.First(e => e.UserId == id));
+            TotalElementsNumber--;
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    private void OpenUserProfile(string name, int id)
+    {
+        string path = StaticFunctions.GetUserUri(name);
+
+        NavigationManager.NavigateTo($"profile/{path}.{id}/");
+    }
+
+    private async Task ShowMoreElements()
+    {
+        IList<UserShortVersion> newUsersList = await AdminManager.GetUsers(PageElementsNumber, currentElementId);
+        foreach (var user in newUsersList)
+        {
+            users.Add(user);
+        }
+        usersToShow = users;
+        StateHasChanged();
+        Console.WriteLine("CURENT ID= " + currentElementId);
+
+        currentElementId++;
+    }
+
+    private string ConvertUserAvatar(byte[] avatar)
+    {
+       return String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(avatar));
+    }
+
+}

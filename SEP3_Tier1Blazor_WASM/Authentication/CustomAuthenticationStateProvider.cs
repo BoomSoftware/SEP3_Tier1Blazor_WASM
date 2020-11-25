@@ -24,7 +24,7 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
             this.jsRuntime = jsRuntime;
             this.userManger = userManger;
         }
-        
+
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             var identity = new ClaimsIdentity();
@@ -41,40 +41,38 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
             {
                 identity = SetupClaimsForUser(CachedUser);
             }
-            
+
             ClaimsPrincipal cachedClaimsPrincipal = new ClaimsPrincipal(identity);
             return await Task.FromResult(new AuthenticationState(cachedClaimsPrincipal));
         }
-        
+
         public async Task Login(Login login)
         {
             Console.WriteLine("Validating log in");
-            if(string.IsNullOrEmpty(login.Email)) throw new Exception("Enter username");
-            if(string.IsNullOrEmpty(login.Password)) throw new Exception("Enter password");
-            
+            if (string.IsNullOrEmpty(login.Email)) throw new Exception("Enter username");
+            if (string.IsNullOrEmpty(login.Password)) throw new Exception("Enter password");
+
             ClaimsIdentity identity = new ClaimsIdentity();
             try
             {
                 UserShortVersion currentLogged = await userManger.Login(login);
-                
+
                 identity = SetupClaimsForUser(currentLogged);
+
                 string serialisedData = JsonSerializer.Serialize(currentLogged);
                 jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentUser", serialisedData);
                 CachedUser = currentLogged;
-
-                Console.WriteLine($"####Current Logged Avatar lenght: {CachedUser.Avatar.Length}\n" +
-                                  $"Full name: {CachedUser.UserFullName}");
             }
             catch (Exception e)
             {
                 throw e;
             }
-            
-            
+
+
             NotifyAuthenticationStateChanged(
                 Task.FromResult<AuthenticationState>(new AuthenticationState(new ClaimsPrincipal(identity))));
         }
-        
+
         public void Logout()
         {
             CachedUser = null;
@@ -86,12 +84,24 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
         private ClaimsIdentity SetupClaimsForUser(UserShortVersion user)
         {
             List<Claim> claims = new List<Claim>();
-            
-            claims.Add(new Claim("Id", user.UserId.ToString()));
-            claims.Add(new Claim("Name", user.UserFullName));
-            claims.Add(new Claim("AccountType", user.AccountType));
-            claims.Add(new Claim("Avatar", Convert.ToBase64String(user.Avatar)));
 
+            claims.Add(new Claim("Id", user.UserId.ToString()));
+            if (user.UserFullName != null)
+                claims.Add(new Claim("Name", user.UserFullName));
+            claims.Add(new Claim("AccountType", user.AccountType));
+            if (user.Avatar != null)
+                claims.Add(new Claim("Avatar", Convert.ToBase64String(user.Avatar)));
+
+            ClaimsIdentity identity = new ClaimsIdentity(claims, "apiauth_type");
+            return identity;
+        }
+
+        private ClaimsIdentity SetupClaimsForAdmin(UserShortVersion admin)
+        {
+            List<Claim> claims = new List<Claim>();
+
+            claims.Add(new Claim("Id", admin.UserId.ToString()));
+            claims.Add(new Claim("AccountType", admin.AccountType));
             ClaimsIdentity identity = new ClaimsIdentity(claims, "apiauth_type");
             return identity;
         }

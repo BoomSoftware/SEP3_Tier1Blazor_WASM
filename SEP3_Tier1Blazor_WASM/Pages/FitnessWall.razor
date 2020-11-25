@@ -1,7 +1,26 @@
 ﻿@page "/FitnessWall"
 @attribute [Authorize]
 
+<div class="container-fluid">
+   <PostCreator OnPostCreated="NewPostCreated" />
+   <Post PostID="0"/>
+</div>
 
 @code {
-    
+    List<PostData> posts;
+
+    private Post createdPost;
+
+    protected async override Task OnInitializedAsync()
+    {
+        //download posts
+        posts = new List<PostData>();
+        
+    }
+
+    protected void NewPostCreated(PostData newPost)
+    {
+        posts.Add(newPost);
+    }
+
 }

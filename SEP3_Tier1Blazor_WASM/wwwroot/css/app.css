@@ -339,61 +339,286 @@ svg {
     height: auto;
 }
 
+.post-creator{
+    background: #FFFFFF;
+    border-radius: 5px;
+    margin: 0 auto 30px auto;
+    padding: 30px;
+    width: 40%;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+    top: 40px;
+    left: -200px;
+}
+
+.post-creator .form-input{
+    font-family: "Roboto", sans-serif;
+    outline: 0;
+    background: #f2f2f2;
+    border-radius: 5px;
+    border: 0;
+    width: 100%;
+    margin: 0 0 5px;
+    padding: 15px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.post-creator .form-button{
+    font-family: "Roboto", sans-serif;
+    text-transform: uppercase;
+    outline: 0;
+    background: #8249ba;
+    width: 100%;
+    border: 0;
+    margin-top: 10px;
+    border-radius: 5px;
+    padding: 15px;
+    color: #FFFFFF;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.post-creator h2{
+    margin-top: 10px;
+    font-size: 18px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.post-creator #title{
+    width: 50%;
+}
+
+.post-creator #content{
+    height: 80px;
+}
 
 
 
+.post-creator button:hover,.post-creator button:active,.post-creator button:focus {
+    background: #8249ba;
+}
+
+.post-creator #toggle-button{
+    border-radius: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+    border: 0px;
+    color: white;
+    background-color: #6f42c1;
+}
 
 
+.post{
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 10px;
+    width: 40%;
+    margin: auto;
+}
 
+.post avatar{
+    border-radius: 20px;
+    width: 45px;
+    height: 45px;
+}
 
+.post-body{
+    padding: 20px;
+}
 
+.post-header{
+    padding: .75rem 1.25rem;
+    margin-bottom: 0;
+    background-color: rgba(0,0,0,.03);
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
 
+.post-title{
+    margin-bottom: 10px;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.post-content{
     
+}
+
+.link:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.post-footer{
+    padding: 10px;
+    background-color: rgba(0,0,0,.03);
+    border-top: 1px solid rgba(0,0,0,.125);
+}
+
+.post-edit-content{
+    height: 100px;
+    width: 100%;
+}
+
+.post-edit-button{
+    margin-top: 20px;
+    border: 0;
+    padding: 10px;
+    width: 150px;
+    border-radius: 10px;
+    background-color: #6f42c1;
+    color: white;
+}
+
+.post-edit-button:hover{
+    color: #000;
+    background-color: #F6511D;
+}
+
+.post-edit-input{
+    border-radius: 10px;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+/*Commment form styling*/
+
+.comment-avatar{
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+}
+
+.comment-time{
+    font-size: 10px;
+}
+
+.comment-input{
+    border: 0;
+    border-radius: 20px;
+    padding: 10px;
+    margin-left: 20px;
+}
+
+.comment-body{
+    margin: 0 20px 15px 15px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 25px;
+}
+.comment-content{
+    margin-left: 20px;
+}
+
+.comment-content p{
+    font-size: 14px;
+}
+
+.comment-author{
+    font-size: 12px;
+    margin: 0 0 5px 0
+}
+.comment-author:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.comment-option{
+    font-size: 12px;
+}
+
+
+
+
+
+
+
+
+
+
+.table-fixed{
+background-color: white;
+border-radius: 10px;
+}
+.table-fixed tbody {
+height: 300px;
+overflow-y: auto;
+width: 100%;
+}
+
+.table-fixed thead,
+.table-fixed tbody,
+.table-fixed tr,
+.table-fixed td,
+.table-fixed th {
+display: block;
+}
+
+.table-fixed tbody td,
+.table-fixed tbody th,
+.table-fixed thead > tr > th {
+float: left;
+position: relative;
+}
+
+.table-fixed thead > tr > th::after {
+ content: '';
+ clear: both;
+ display: block;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*User profile styling*/
 .container {
@@ -675,6 +900,14 @@ main {
     body{
         background-image: url("../img/bg-small.svg");
     }
+    
+    .post-creator{
+        width: 80%;
+    }
+    
+    .post{
+        width: 80%;
+    }
 
     .login-bar{
         margin-bottom: 30px !important;
@@ -706,6 +939,8 @@ main {
     app {
         flex-direction: row;
     }
+    
+    
 
     .sidebar {
         width: 250px;

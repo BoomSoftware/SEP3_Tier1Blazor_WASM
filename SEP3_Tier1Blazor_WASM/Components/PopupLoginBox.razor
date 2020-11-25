@@ -21,7 +21,6 @@
             {
                 <p class="error-message" style="background-color: red">No users found</p>
             }
-
         </EditForm>
     </div>
 </div>
@@ -31,9 +30,7 @@
     [Parameter]
     public EventCallback CloseComponent { get; set; }
 
-
     private Login login = new Login();
-
     private bool errorVisibility = false;
 
     private void OpenRegisterPage()
@@ -51,10 +48,22 @@
         try
         {
             await ((CustomAuthenticationStateProvider) Authentication).Login(login);
-            NavigationManager.NavigateTo("/fitnesswall");
+
+            string authRole = Authentication.GetAuthenticationStateAsync().Result.User.Claims.First(c => c.Type.Equals("AccountType")).Value;
+            
+            if (authRole.Equals("Administrator"))
+            {
+                NavigationManager.NavigateTo("/admindashboard");
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/fitnesswall");
+            }
+                
         }
         catch (Exception e)
         {
+            Console.WriteLine(e);
             errorVisibility = true;
             StateHasChanged();
         }

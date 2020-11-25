@@ -8,8 +8,8 @@ namespace SEP3_Tier1Blazor_WASM.Data.AdminData
 {
     public interface IAdminManager
     {
-        Task<IList<UserShortVersion>> GetUsers(int number);
-        Task<IList<PostShortVersion>> GetPosts(int number);
+        Task<IList<UserShortVersion>> GetUsers(int number, int offset);
+        Task<IList<PostShortVersion>> GetPosts(int number, int offset);
         Task<int> GetTotalNumberOfUsers();
         Task<int> GetTotalNumberOfPosts();
 

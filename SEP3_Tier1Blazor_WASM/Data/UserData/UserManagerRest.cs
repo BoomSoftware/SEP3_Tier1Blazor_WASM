@@ -16,7 +16,6 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
     {
         private HttpClient client;
         private string uri;
-        private IList<User> users;
 
 
         public UserManagerRest()

@@ -7,10 +7,11 @@ namespace SEP3_Tier1Blazor_WASM.Models
     {
         public int Id { get; set; }
         public string Title { get; set; }
-        public User Owner { get; set;}
+        public UserShortVersion Owner { get; set;}
         public string Content { get; set;}
         public DateTime CreationTime { get; set;}
         public List<Comment> Comments { get; set;}
+        public byte[] Picture { get; set; }
         public int LikeNumber { get; set;}
     }
 }

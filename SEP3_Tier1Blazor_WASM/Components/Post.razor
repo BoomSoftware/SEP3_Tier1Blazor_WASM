@@ -6,39 +6,118 @@
 @inject NavigationManager NavigationManager
 @inject IUserManger UserManger
 @inject IPostManager PostManager
-<div class="card gedf-card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="mr-2">
-                    <img class="rounded-circle" width="45" src="https://picsum.photos/50/50" alt="">
-                </div>
-                <div class="ml-2">
-                    <div class="h5 m-0" @onclick=@(e => OpenAuthorProfile(PostData.Owner))>@PostData.Owner.Name</div>
-                    <div class="h7 text-muted">@PostData.CreationTime</div>
+@inject AuthenticationStateProvider Authentication;
+@inject IFileUpload FileUpload
+
+@if (!isDelete)
+{
+    <div class="post">
+    <div class="post-header">
+        <div class="row">
+            <div class="col-6">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="mr-2">
+                            <img class="rounded-circle" width="45" src="https://picsum.photos/50/50" alt="">
+                        </div>
+                        <div class="ml-2">
+                            <div class="h5 m-0 link" @onclick=@(e => OpenAuthorProfile(PostData.Owner))> @PostData.Owner.UserFullName</div>
+                            <div class="h7 text-muted">@PostData.CreationTime</div>
+                        </div>
+                    </div>
+                    <div>
+                    </div>
                 </div>
             </div>
-            <div>
+            <div class="col-6 d-flex justify-content-end">
+                <AuthorizeView Resource="PostData.Owner.UserId" Policy="CurrentLogged">
+                     <img src="/img/options.png" alt="options" width="30" height="30" class="link" @onclick=TogglePostOptions>
+                                    <div class="@OptionsCssClass">
+                                        <a class="dropdown-item link" @onclick=StartEditMode>Edit</a>
+                                        <a class="dropdown-item link" @onclick=DeletePost>Delete</a>
+                                    </div>
+                </AuthorizeView>
             </div>
         </div>
 
     </div>
-    <div class="card-body">
-        <a class="card-link" href="#">
-            <h5 class="card-title">
+    <div class="post-body">
+        @if (isEditMode)
+        {
+            <input type="text" class="post-edit-input" @bind=@EditPost.Title/>
+            <textarea @bind=@EditPost.Content class="post-edit-content post-edit-input">@EditPost.Content</textarea>
+        }
+        else
+        {
+            <h5 class="post-title">
                 @PostData.Title
             </h5>
-        </a>
 
-        <p class="card-text">
-            @PostData.Content
-        </p>
+            <p class="post-content">
+                @PostData.Content
+            </p>
+        }
+
+@*         @if (PostData.Picture != null) *@
+@*         { *@
+            <img class="img-fluid" src="/img/example-bg.jpg"/>
+
+            @if (isEditMode)
+            {
+                <InputFile OnChange="OnInputFileChanged"/>
+                <br>
+            }
+        @* } *@
+        
+        @if (isEditMode)
+        {
+            <button @onclick=ConfirmEdit class="post-edit-button">Confirm</button>
+            <button @onclick=CancelEdit class="post-edit-button">Cancel</button>
+        }
+
     </div>
-    <div class="card-footer">
-        <a href="#" class="card-link"><i class="fa fa-gittip"></i> Like</a>
-        <a href="#" class="card-link"><i class="fa fa-comment"></i> Comment</a>
+    <div class="post-footer">
+        <div class="row">
+            <div class="col-6">
+                <i class="link" @onclick=AddReaction>Like</i>
+                <i class="link" @onclick=ShowCommentSection>Comment (@PostData.Comments.Count)</i>
+            </div>
+            <div class="col-6 d-flex justify-content-end">
+                <img src="/img/muscle-liked.png" alt="like" width="20" height="20"/>
+                <p> @PostData.LikeNumber</p>
+            </div>
+        </div>
+
+
+        @if (commentSectionVisibility)
+        {
+            <div class="row" style="margin-bottom: 30px;margin-top: 10px;">
+                <div class="col-1">
+                    <img src="/img/logo.png" class="rounded-circle" width="45"/>
+                </div>
+                <input class="col-9 comment-input" type="text" placeholder="Write your comment here" @bind=commentContent @onkeyup=SendComment/>
+            </div>
+
+            foreach (var comment in PostData.Comments)
+            {
+                <div class="h7 text-muted comment-time">@comment.CreationTime</div>
+                <div class="row comment-body">
+                    <div class="col-1 d-flex align-self-center">
+                        <img src="/img/logo.png" class="rounded-circle " width="45"/>
+                    </div>
+                    <div class="col-9 comment-content">
+                        <div class="comment-author link" @onclick=@(e => OpenAuthorProfile(comment.Owner))> @comment.Owner.UserFullName</div>
+                        <p>@comment.Content</p>
+                        <AuthorizeView Resource="GetAuthorizedString(comment.Owner.UserId)"Policy="CurrentLogged/Owner/Admin">
+                            <i class="link comment-option" @onclick=@(e => RemoveComment(comment.Id))>Delete</i>
+                        </AuthorizeView>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
+}
 
 @code {
 
@@ -46,49 +125,140 @@
     public int PostID { get; set; }
 
     private PostData PostData;
+    private PostData EditPost;
 
     private string avatarImgSrc;
     private string reactionSrc = "img/muscule-like.png";
     private bool commentSectionVisibility = false;
+    private bool optionsVisibility = false;
+    private bool isEditMode = false;
+    private bool isDelete = false;
+    private string commentContent = "";
+
+    private string pictureSrc;
+
+    string baseMenuClass = "navbar-collapse";
+    string basePostMenuClass = "dropdown-menu dropdown-menu-lg-right dropdown-secondary";
+
+    string OptionsCssClass => basePostMenuClass + (optionsVisibility ? " show" : "");
 
     protected override async Task OnInitializedAsync()
     {
-        PostData = await PostManager.GetPost(PostID);
+        UserShortVersion user = new UserShortVersion
+        {
+            AccountType = "RegularUser",
+            UserFullName = "Barry Allen",
+            UserId = 0,
+            Avatar = new byte[] {}
+        };
+
+        PostData = await PostManager.GetPost(user);
+        EditPost = PostData;
 
     // avatarImgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(PostData.Owner.Avatar));
     //if (((UserManagerRest) UserManger).CurrentLogged.LikedPostIds.Contains(PostData.Id))
         reactionSrc = "img/muscule-liked.png";
     }
 
-    private void OpenAuthorProfile(User user)
+    private void OpenAuthorProfile(UserShortVersion user)
     {
-        if (user.Name.Contains(" "))
-        {
-            string name = user.Name;
-            StringBuilder stringBuilder = new StringBuilder(name);
-
-            for (int i = 0; i <= stringBuilder.Length; i++)
-            {
-                if (stringBuilder[i] == (char) 32)
-                {
-                    stringBuilder[i] = '.';
-                }
-            }
-
-            name = stringBuilder.ToString();
-            NavigationManager.NavigateTo("profile/" + name + "." + user.Id + "/");
-        }
-
-        else
-        {
-            NavigationManager.NavigateTo("profile/" + user.Name + "." + user.Id + "/");
-        }
+        string path = StaticFunctions.GetUserUri(user.UserFullName);
+        NavigationManager.NavigateTo($"profile/{path}.{user.UserId}");
     }
 
     private void ShowCommentSection()
     {
+        commentSectionVisibility = !commentSectionVisibility;
+        StateHasChanged();
+    }
+
+    private void ConvertPostImage()
+    {
+        pictureSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(PostData.Picture));
+    }
+
+    private async Task SendComment(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            Comment comment = new Comment { Id = PostData.Comments.Count, Content = commentContent, Owner = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()), CreationTime = DateTime.Now};
+
+           // await PostManager.AddCommentToPost(comment, PostID);
+            
+            //if success
+            PostData.Comments.Insert(0, comment);
+            commentSectionVisibility = true;
+            commentContent = "";
+            
+            
+            StateHasChanged();
+        }
+    }
+
+    private void TogglePostOptions()
+    {
+        optionsVisibility = !optionsVisibility;
+    }
+
+    private void AddReaction()
+    {
+        
+        //base on response add or remove one reaction from post
+        
+    }
+
+    private void StartEditMode()
+    {
+        isEditMode = true;
+    }
+    
+    private async Task OnInputFileChanged(IFileListEntry[] files)
+    {
+        byte[] postImage = await FileUpload.ConvertFile(files.FirstOrDefault());
+        EditPost.Picture = postImage;
+
+        pictureSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(postImage));
+
+        StateHasChanged();
+    }
+
+    private async Task ConfirmEdit()
+    {
+        await PostManager.EditPost(EditPost);
+        Console.WriteLine("Content: " + EditPost.Content);
+        CancelEdit();
+    }
+
+    private void CancelEdit()
+    {
+        isEditMode = false;
+        StateHasChanged();
+    }
+
+    private async Task DeletePost()
+    {
+       // await PostManager.RemovePost(PostID);
+        //if success remove
+        isDelete = true;
+        
+        StateHasChanged();
+    }
+
+    private async Task RemoveComment(int id)
+    {
+       // await PostManager.RemoveCommentFromPost(id, PostID);
+        //if success
+        var comments = PostData.Comments.ToList();
+        comments.RemoveAll(e => e.Id == id);
+        PostData.Comments = comments;
+
         commentSectionVisibility = true;
         StateHasChanged();
+    }
+
+    private string GetAuthorizedString(int commentOwnerId)
+    {
+        return PostData.Owner.UserId + "." + commentOwnerId;
     }
 
 }

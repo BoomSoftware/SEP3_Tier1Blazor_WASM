@@ -15,19 +15,19 @@ namespace SEP3_Tier1Blazor_WASM.Data.AdminData
         public AdminManagerRest()
         {
             httpClient = new HttpClient();
-            uri = "http://localhost:8080/";
+            uri = "http://localhost:8080/admin";
         }
         
-        public async Task<IList<UserShortVersion>> GetUsers(int number)
+        public async Task<IList<UserShortVersion>> GetUsers(int number, int offset)
         {
-            string result = await httpClient.GetStringAsync($"users/{uri}/?????????");
+            string result = await httpClient.GetStringAsync($"{uri}/users?limit={number}&offset={offset}");
 
             IList<UserShortVersion> users = JsonSerializer.Deserialize<IList<UserShortVersion>>(result);
 
             return users;
         }
 
-        public async Task<IList<PostShortVersion>> GetPosts(int number)
+        public async Task<IList<PostShortVersion>> GetPosts(int number, int offset)
         {
             string result = await httpClient.GetStringAsync($"posts/{uri}/?????????");
 
@@ -36,9 +36,11 @@ namespace SEP3_Tier1Blazor_WASM.Data.AdminData
             return posts;
         }
 
-        public Task<int> GetTotalNumberOfUsers()
+        public async Task<int> GetTotalNumberOfUsers()
         {
-            throw new System.NotImplementedException();
+            string result = await httpClient.GetStringAsync($"{uri}/total?model=users");
+            return int.Parse(result);
+
         }
 
         public Task<int> GetTotalNumberOfPosts()

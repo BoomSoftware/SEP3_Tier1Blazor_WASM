@@ -1,0 +1,81 @@
+﻿@using System.Security.Cryptography
+@inject AuthenticationStateProvider Authentication
+@inject IFileUpload FileUpload
+@inject IPostManager PostManager
+<div class="post-creator">
+    <div class="row">
+        <div class="col-6 d-flex align-self-center">
+            <h2>Create your post</h2>
+        </div>
+        <div class="col-6 d-flex justify-content-end">
+            <button id="toggle-button" @onclick=ToggleCreator>+</button>
+        </div>
+    </div>
+    <div class="row">
+         <div class="content">
+                <EditForm OnValidSubmit=CreatePost Model="postShortVersion">
+                    @if (isCreationProcess)
+                    {
+                        <InputText class="form-input" placeholder="Title" id="title" @bind-Value="postShortVersion.Title"/>
+                        <InputTextArea class="form-input" placeholder="Content" id="content" @bind-Value="postShortVersion.Content"/>
+                        <InputFile OnChange="OnInputFileChanged"/>
+                        @if (postShortVersion.Picture != null)
+                        {
+                            <img src="@postImgSrc" alt="PostImage" width="200" height="100"/>
+                        }
+                        <input type="submit" class="form-button" value="Create Post"/>
+                    }
+                </EditForm>
+            </div>
+    </div>
+   
+</div>
+
+@code {
+
+    [Parameter]
+    public EventCallback<PostData> OnPostCreated { get; set; }
+    
+    private PostShortVersion postShortVersion;
+    private string postImgSrc;
+    private bool isCreationProcess = false;
+
+    protected override void OnInitialized()
+    {
+        postShortVersion = new PostShortVersion();
+    }
+
+    private async Task<Task> CreatePost()
+    {
+        postShortVersion.Owner = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+        postShortVersion.TimeStamp = DateTime.Now.ToLongTimeString();
+
+        try
+        {
+            //await PostManager.AddNewPost(postShortVersion);
+            return OnPostCreated.InvokeAsync(new PostData{Title = postShortVersion.Title, Owner = postShortVersion.Owner, CreationTime = DateTime.Now, Picture = postShortVersion.Picture});
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        return null;
+    }
+
+    private async Task OnInputFileChanged(IFileListEntry[] files)
+    {
+        byte[] postImage = await FileUpload.ConvertFile(files.FirstOrDefault());
+        postShortVersion.Picture = postImage;
+
+        postImgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(postImage));
+
+        StateHasChanged();
+    }
+
+    private void ToggleCreator()
+    {
+        isCreationProcess = !isCreationProcess;
+        StateHasChanged();
+    }
+
+}
