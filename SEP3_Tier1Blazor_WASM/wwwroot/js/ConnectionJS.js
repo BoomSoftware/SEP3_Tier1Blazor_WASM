@@ -8,12 +8,12 @@ function connect(dotnet, id) {
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
-        stompClient.subscribe('/user/'+id+'/queue/notifications', function (notification) {
+        stompClient.subscribe('/topic/notifications/' + id, function (notification) {
             showGreeting(JSON.parse(notification.body).content);
         });
         
-        stompClient.subscribe('/queue/errors/' + id, function (error){
-            showGreeting(JSON.parse(error.body).content);
+        stompClient.subscribe('/topic/errors/' + id, function (error){
+            showGreeting(error);
         });
     });
 }
@@ -33,7 +33,7 @@ function sendName(name) {
 
 function sendFriendRequest(userAction){
     console.log(stompClient)
-    stompClient.send("/app/notifications", {}, userAction);
+    stompClient.send("/app/note", {}, userAction);
     console.log("Friend request sent");
 }
 
