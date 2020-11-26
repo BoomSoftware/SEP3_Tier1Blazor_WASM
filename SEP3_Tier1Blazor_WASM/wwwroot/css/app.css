@@ -344,7 +344,6 @@ svg {
     border-radius: 5px;
     margin: 0 auto 30px auto;
     padding: 30px;
-    width: 40%;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
     top: 40px;
     left: -200px;
@@ -422,7 +421,6 @@ svg {
     background-clip: border-box;
     border: 1px solid rgba(0,0,0,.125);
     border-radius: 10px;
-    width: 40%;
     margin: auto;
 }
 
@@ -535,6 +533,155 @@ svg {
 
 
 
+.notification-dropdown{
+    height: 400px;
+    border-radius: 20px;
+    padding: 5px;
+}
+
+.notification-item{
+    border-bottom: 1px solid black;
+    height: 70px;
+}
+
+.notification-item:hover{
+    cursor: pointer;
+    
+}
+
+.notification-sender{
+    font-size: 20px;
+    margin: 0;
+    letter-spacing: 1px;
+    font-weight: 900;
+    color: #6f42c1;
+    text-shadow: 0.5px 0.5px 0.5px black;
+}
+
+.notification-content{
+    padding: 0px;
+    text-transform: uppercase;
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+
+
+.calendar-card{
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0px 0px 52px -18px rgba(0, 0, 0, 0.75);
+}
+
+.calendar-card .title{
+    padding-top: 40px;
+    text-transform: uppercase;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin: 0;
+}
+
+.calendar-card .sub-title{
+    text-align: center;
+    margin-bottom: 30px;
+    padding-top: 10px;
+    font-size: 20px;
+}
+
+.calendar-card .date-box{
+    width: 98%;
+    margin: 10px 10px 10px auto;
+    background-color: #622985;
+    border-radius: 20px;
+    padding: 20px;
+    color: white;
+    cursor: pointer;
+}
+
+.calendar-card .date-box:hover{
+    background-color: #F6511D;
+}
+
+.calendar-card .date-box:hover .duration-box{
+    background-color: #622985;
+}
+
+.calendar-card .date-box .date{
+    font-size: 20px;
+    padding: 0px;
+}
+
+.calendar-card .date-box .date-title{
+    font-size: 14px;
+    margin-bottom: 15px;
+    padding: 0px;
+}
+
+.training-subtitle{
+    font-size: 20px;
+    margin-top: 30px;
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+.training-complete-button{
+    
+}
+
+.duration-box{
+    background-color: #F6511D;
+    color: white;
+    text-align: center;
+    font-size: 15px;
+    border-radius: 20px;
+    font-weight: 800;
+}
+
+.training-title{
+    text-transform: uppercase;
+    text-shadow: 1px 1px 3px black;
+    font-size: 20px;
+}
+.training-time{
+    text-shadow: 1px 1px 3px black;
+    font-size: 16px;
+}
+
+.complete-box{
+    text-align: center;
+}
+
+.training-complete-button{
+    background-color: white;
+    border: 0;
+    padding: 5px;
+    width: 100px;
+    border-radius: 20px;
+}
+
+.card-end{
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.training-complete-button:hover{
+    background-color: #622985;
+    color: white;
+}
+
+.training-plan-back-button{
+    padding: 5px;
+    margin-bottom: 10px;
+    width: 100px;
+    border-radius: 20px;
+    background-color: #F6511D;
+    color: white;
+    border: 0;
+}
 
 
 

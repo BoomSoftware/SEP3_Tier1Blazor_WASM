@@ -9,7 +9,7 @@ function connect(dotnet, id) {
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
         stompClient.subscribe('/topic/notifications/' + id, function (notification) {
-            showGreeting(JSON.parse(notification.body).content);
+            showFriendRequest(notification.body);
         });
         
         stompClient.subscribe('/topic/errors/' + id, function (error){
@@ -37,15 +37,12 @@ function sendFriendRequest(userAction){
     console.log("Friend request sent");
 }
 
-function showFriendRequest(requesterShortVersion){
-    console.log(requesterShortVersion);
-    Blazor.invokeMethodAsync('ShowFriendRequest', requesterShortVersion)
-        .then(data => {
-            console.log(data);
-        });
+function showFriendRequest(notification){
+    Blazor.invokeMethodAsync('ShowFriendRequest', notification)
+    console.log("JS file"+ notification)
 }
 
 function showGreeting(message) {
-    console.log(message);
+    //console.log(message);
 }
     

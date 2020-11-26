@@ -5,8 +5,17 @@
 
 
 <div class="container-fluid">
-   <PostCreator OnPostCreated="NewPostCreated" />
-   <Post PostID="0"/>
+    <div class="row">
+        <CalendarCard/>
+        <div class="col-6 offset-1">
+            <PostCreator OnPostCreated="NewPostCreated"/>
+            <Post PostID="0"/>
+        </div>
+        <div class="col-2">
+            avalialble users
+        </div>
+    </div>
+
 </div>
 
 @code {
@@ -16,12 +25,11 @@
 
     protected async override Task OnInitializedAsync()
     {
-        // var dotNetReference = DotNetObjectReference.Create(this);
-        // await JS.InvokeVoidAsync("connect", dotNetReference, StaticFunctions.GetLoggedUserId( await Authentication.GetAuthenticationStateAsync()));
-        
-        //download posts
+    // var dotNetReference = DotNetObjectReference.Create(this);
+    // await JS.InvokeVoidAsync("connect", dotNetReference, StaticFunctions.GetLoggedUserId( await Authentication.GetAuthenticationStateAsync()));
+
+    //download posts
         posts = new List<PostData>();
-        
     }
 
     protected void NewPostCreated(PostData newPost)
