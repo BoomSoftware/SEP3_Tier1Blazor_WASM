@@ -684,7 +684,83 @@ svg {
 }
 
 
+.scheduler{
+    background-color: white;
+}
 
+.scheduler td{
+    height: 60px;
+}
+.scheduler-training{
+    position: absolute;
+    color: white;
+}
+.scheduler-training-title{
+    padding: 0;
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    
+}
+
+.scheduler-training-time{
+    padding: 5px;
+    font-weight: 100;
+    font-size: 13px;
+}
+
+.table thead th{
+    padding: 20px;
+    text-align: center;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: lighter;
+}
+
+.scheduler-time{
+    letter-spacing: 1px;
+    font-weight: lighter;
+    text-align: center;
+    font-size: 13px;
+}
+
+.table thead .th:first-child{
+    width: 5%;
+}
+
+.table thead .five-days{
+    width: 19%;
+}
+
+
+.table thead .five-days:first-child{
+    width: 5%;
+}
+
+.table thead .seven-days{
+    width: 14%;
+}
+
+.table thead .seven-days:first-child{
+    width: 2%;
+}
+
+.modal {
+    overflow-y:auto;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+    max-height: 600px;
+    overflow: scroll;
+}
 
 
 

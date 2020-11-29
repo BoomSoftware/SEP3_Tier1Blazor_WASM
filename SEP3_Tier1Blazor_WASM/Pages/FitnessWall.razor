@@ -1,6 +1,5 @@
 ﻿@page "/FitnessWall"
 @attribute [Authorize]
-@* @inject IJSRuntime JS; *@
 @inject AuthenticationStateProvider Authentication
 
 
@@ -9,7 +8,10 @@
         <CalendarCard/>
         <div class="col-6 offset-1">
             <PostCreator OnPostCreated="NewPostCreated"/>
-            <Post PostID="0"/>
+            @foreach (var post in posts)
+            {
+                <Post PostID="post.Id"/>
+            }
         </div>
         <div class="col-2">
             avalialble users
@@ -18,6 +20,7 @@
 
 </div>
 
+
 @code {
     List<PostData> posts;
 
@@ -25,16 +28,13 @@
 
     protected async override Task OnInitializedAsync()
     {
-    // var dotNetReference = DotNetObjectReference.Create(this);
-    // await JS.InvokeVoidAsync("connect", dotNetReference, StaticFunctions.GetLoggedUserId( await Authentication.GetAuthenticationStateAsync()));
-
-    //download posts
         posts = new List<PostData>();
     }
 
-    protected void NewPostCreated(PostData newPost)
+    private void NewPostCreated(PostData newPost)
     {
         posts.Add(newPost);
+        StateHasChanged();
     }
 
 }

@@ -15,5 +15,7 @@ namespace SEP3_Tier1Blazor_WASM.Models
         public bool IsCompleted { get; set; }
         [JsonPropertyName("durationInMinutes")]
         public int DurationInMinutes { get; set; }
+        [JsonPropertyName("color")]
+        public string Color { get; set; }
     }
 }

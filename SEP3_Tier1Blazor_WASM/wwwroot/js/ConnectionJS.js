@@ -41,8 +41,3 @@ function showFriendRequest(notification){
     Blazor.invokeMethodAsync('ShowFriendRequest', notification)
     console.log("JS file"+ notification)
 }
-
-function showGreeting(message) {
-    //console.log(message);
-}
-    

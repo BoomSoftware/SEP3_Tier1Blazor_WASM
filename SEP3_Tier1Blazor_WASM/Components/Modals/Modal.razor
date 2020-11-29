@@ -1,0 +1,99 @@
+﻿<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modal title</h5>
+                <button type="button" class="close" @onclick=Close>
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @foreach (var exercise in exercises)
+                {
+                    SearchForVideo(exercise.Description);
+                    
+                    <div class="calendar-card">
+                        <div class="row date-box d-flex align-items-center date-box">
+                            <h7 class="text-muted">@exercise.Type</h7>
+                            <h4 class="date-title col-12">@exercise.Title</h4>
+                            <p class="date training-time col-12">
+                                @exercise.Description
+                                
+                                @if (videos.Any())
+                                {
+                                    foreach (var video in videos)
+                                    {
+                                        <iframe class="img-fluid" src="@video"></iframe>
+                                    }
+                                }
+                            </p>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick=Close>Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+@code {
+
+    [Parameter]
+    public TrainingModel TrainingModel { get; set; }
+
+    private string ModalDisplay = "none;";
+    private string ModalClass = "";
+    private bool ShowBackdrop = false;
+    private List<ExerciseModel> exercises;
+    private List<string> videos;
+
+    protected override async Task OnInitializedAsync()
+    {
+    //get exercises for training;
+        exercises = new List<ExerciseModel>();
+        exercises.Add(new ExerciseModel {Description = "Amazing exercise, 5 series each 3min and 1min break. Do perfect pushups with a straight back.", Title = "Powerful Pushups", Type = "Strong"});
+        exercises.Add(new ExerciseModel {Description = "Amazing exercise, 5 series each 3min and 1min break. Do perfect pushups with a straight back. Link: https://www.youtube.com/watch?v=IODxDxX7oi4", Title = "Powerful Pushups", Type = "Strong"});
+        exercises.Add(new ExerciseModel {Description = "Amazing exercise, 5 series each 3min and 1min break. Do perfect pushups with a straight back. Link: https://www.youtube.com/watch?v=IODxDxX7oi4", Title = "Powerful Pushups", Type = "Strong"});
+    }
+
+    public void Open()
+    {
+        ModalDisplay = "block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ModalDisplay = "none";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+    }
+
+    private void SearchForVideo(string description)
+    {
+       string[] words = description.Split(" ");
+        videos = new List<string>();
+        foreach (var word in words)
+        {
+            if (word.Contains("www.youtube.com"))
+            {
+                string newWord = word.Replace("watch?v=", "embed/");
+                videos.Add(newWord);
+            }
+        }
+    }
+
+
+}

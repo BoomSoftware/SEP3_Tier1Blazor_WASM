@@ -19,7 +19,7 @@
                         <InputText class="form-input" placeholder="Title" id="title" @bind-Value="postShortVersion.Title"/>
                         <InputTextArea class="form-input" placeholder="Content" id="content" @bind-Value="postShortVersion.Content"/>
                         <InputFile OnChange="OnInputFileChanged"/>
-                        @if (postShortVersion.Picture != null)
+                        if (postShortVersion.Picture != null)
                         {
                             <img src="@postImgSrc" alt="PostImage" width="200" height="100"/>
                         }
@@ -48,12 +48,14 @@
     private async Task<Task> CreatePost()
     {
         postShortVersion.Owner = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
-        postShortVersion.TimeStamp = DateTime.Now.ToLongTimeString();
-
+        if (postImgSrc == null || !postImgSrc.Equals(""))
+            postShortVersion.HasImage = false;
+        else
+            postShortVersion.HasImage = true;
         try
         {
-            //await PostManager.AddNewPost(postShortVersion);
-            return OnPostCreated.InvokeAsync(new PostData{Title = postShortVersion.Title, Owner = postShortVersion.Owner, CreationTime = DateTime.Now, Picture = postShortVersion.Picture});
+            int newPostId = await PostManager.AddNewPost(postShortVersion);
+            return OnPostCreated.InvokeAsync(await PostManager.GetPostById(newPostId));
         }
         catch (Exception e)
         {

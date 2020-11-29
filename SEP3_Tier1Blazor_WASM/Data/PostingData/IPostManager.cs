@@ -6,10 +6,10 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
 {
     public interface IPostManager
     {
-        Task AddNewPost(PostShortVersion post);
+        Task<int> AddNewPost(PostShortVersion post);
         Task RemovePost(int id);
         Task EditPost(PostData editedPost);
-        Task<PostData> GetPost(UserShortVersion userShortVersion);
+        Task<PostData> GetPostById(int id);
         Task<List<PostData>> GetUserPosts(int userId);
         Task AddCommentToPost(Comment comment, int postId);
         Task RemoveCommentFromPost(int commentId, int postId);

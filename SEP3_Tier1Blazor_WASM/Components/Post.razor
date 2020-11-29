@@ -144,18 +144,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        UserShortVersion user = new UserShortVersion
-        {
-            AccountType = "RegularUser",
-            UserFullName = "Barry Allen",
-            UserId = 0,
-            Avatar = new byte[] {}
-        };
-
-        PostData = await PostManager.GetPost(user);
+        PostData = await PostManager.GetPostById(PostID);
         EditPost = PostData;
-
-    // avatarImgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(PostData.Owner.Avatar));
+        avatarImgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(PostData.Owner.Avatar));
     //if (((UserManagerRest) UserManger).CurrentLogged.LikedPostIds.Contains(PostData.Id))
         reactionSrc = "img/muscule-liked.png";
     }
