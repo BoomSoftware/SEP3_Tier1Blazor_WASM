@@ -1,0 +1,90 @@
+﻿@inject NavigationManager NavigationManager
+@inject IUserManger UserManger
+
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Title</h5>
+                <button type="button" class="close" @onclick=Close>
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <ul class="list-group">
+                    @foreach (var user in Users)
+                    {
+                        <UserInList User="@user"/>
+                    }
+                    
+                    <button @onclick=LoadMoreUsers>Load More</button>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+@code {
+
+    [Parameter]
+    public List<UserShortVersion> Users { get; set; }
+    
+    [Parameter]
+    public string Title { get; set; }
+    
+    [Parameter]
+    public string ListType { get; set; }
+    
+    [Parameter]
+    public int CurrentLoggedId { get; set; }
+
+    [Parameter]
+    public int UserId { get; set; }
+
+    private string ModalDisplay = "none;";
+    private string ModalClass = "";
+    private bool ShowBackdrop = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = new List<UserShortVersion>();
+    }
+
+    public void Open()
+    {
+        ModalDisplay = "block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        ModalDisplay = "none";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadMoreUsers()
+    {
+        List<UserShortVersion> temp = new List<UserShortVersion>();
+        if (ListType.Equals("FriendList"))
+            temp = await UserManger.GetUserFriends(UserId,CurrentLoggedId, Users.Count);
+
+        foreach (var user in temp)
+        {
+            Users.Add(user);
+        }
+        
+        StateHasChanged();
+    }
+
+}

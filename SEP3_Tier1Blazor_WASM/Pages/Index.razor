@@ -1,70 +1,42 @@
 ﻿@inject NavigationManager NavigationManager
-
 @page "/"
-<div class="container-fluid">
-    <LoginBar/>
-    <div class="main" @onmousemove="RotateBox">
-        <div class="row h-100 justify-content-md-center">
-            <div class="col-lg-5 col-md-12 my-auto">
-                <h1 style="@perspectiveCss">
-                    Start your adventure with fitness
-                </h1>
-                <p>Plan your training, share your achievements with friends, arrange sessions together. ShapeApp gives you all these possibilities as well as many others. Do not hesitate and join a fitness society you have never known before!</p>
-                <div class="register-button-box">
-                    <button class="register-button" @onclick=OpenRegisterPage>Register now</button>
+<AuthorizeView>
+    <Authorized>
+        @InvokeAsync(() =>
+        {
+            NavigationManager.NavigateTo("/fitnesswall");
+        })
+    </Authorized>
+    <NotAuthorized>
+        <div class="container-fluid">
+            <LoginBar/>
+            <div class="main" @onmousemove="RotateBox">
+                <div class="row h-100 justify-content-md-center content-row">
+                    <div class="col-lg-5 col-md-12 my-auto">
+                        <h1 style="@perspectiveCss">
+                            Start your adventure with fitness
+                        </h1>
+                        <p>Plan your training, share your achievements with friends, arrange sessions together. ShapeApp gives you all these possibilities as well as many others. Do not hesitate and join a fitness society you have never known before!</p>
+                        <div class="register-button-box">
+                            <button class="register-button" @onclick=OpenRegisterPage>Register now</button>
+                        </div>
+        
+                    </div>
+                    <div class="col-lg-5 col-md-12 text-center">
+                        <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
+                            <ChatSvg/>
+                        </Animate>
+                    </div>
                 </div>
-
             </div>
-            <div class="col-lg-5 col-md-12 text-center">
-                <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
-                    <ChatSvg/>
-                </Animate>
-                <form @onsubmit="SendMessageAsync">
-                    Message: <input @bind="@message"/>
-                    <button type="submit">Send</button>
-                </form>
-
-                <pre>@log</pre>
-            </div>
+            @* <Scheduler DaysInWeek="5" StartHour="8" EndHour="20"/> *@
+            @* <CalendarCard /> *@
         </div>
-    </div>
-    
-    @* <Scheduler DaysInWeek="5" StartHour="8" EndHour="20"/> *@
-    
-    @* <CalendarCard /> *@
-
-
-
-</div>
-
-    
+    </NotAuthorized>
+</AuthorizeView>
 
 @code{
     
-    string message = "";
-    string log = "";
-    
-    protected override async Task OnInitializedAsync()
-    {
-    }
-    
-    async Task SendMessageAsync()
-    {
-
-       // await JS.InvokeVoidAsync("sendName", message);
-    }
-
-    [JSInvokable("AddText")]
-    public void AddTextToTextHistory(string text)
-    {
-        log += text + "\n";
-        StateHasChanged();
-        System.Diagnostics.Debug.WriteLine("DotNet: Received " + text);
-    }
-
-
-
-
     private double rotationY;
     private double? tempX;
 
@@ -86,6 +58,4 @@
     {
         NavigationManager.NavigateTo("/registration");
     }
-    
-
 }

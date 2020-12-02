@@ -50,10 +50,17 @@
             await ((CustomAuthenticationStateProvider) Authentication).Login(login);
 
             string authRole = Authentication.GetAuthenticationStateAsync().Result.User.Claims.First(c => c.Type.Equals("AccountType")).Value;
+            string authName = Authentication.GetAuthenticationStateAsync().Result.User.Claims.First(c => c.Type.Equals("Name")).Value;
+            string authId = Authentication.GetAuthenticationStateAsync().Result.User.Claims.First(c => c.Type.Equals("Id")).Value;
             
             if (authRole.Equals("Administrator"))
             {
                 NavigationManager.NavigateTo("/admindashboard");
+            }
+            else if(authRole.Equals("PageOwner"))
+            {
+                string uri = StaticFunctions.GetUserUri(authName);
+                NavigationManager.NavigateTo($"/profile/{uri}.{authId}/");
             }
             else
             {

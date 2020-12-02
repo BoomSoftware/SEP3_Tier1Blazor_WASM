@@ -5,9 +5,9 @@
 
 <div class="container-fluid">
     <div class="main">
-        <div class="row h-100 justify-content-md-center">
+        <div class="row h-100 justify-content-md-center content-row">
             <div class="col-lg-5 col-md-12 my-auto">
-                <h1 style="font-size: 38px">Select type of the account:</h1>
+                <h1 style="font-size: 38px">Select elements to manage:</h1>
                 <button class="action-button purple @userPressedButton" @onclick=OpenUsersView><img src="/img/user.svg"></button>
                 <button class="action-button purple @companyPressedButton" @onclick=OpenPostsView><img src="/img/company.svg"></button>
             </div>
@@ -26,23 +26,31 @@
     private RenderFragment tableRender;
     private string userPressedButton;
     private string companyPressedButton;
+    private List<int> posts;
     
     int totalNumberOfUsers;
 
     protected async override Task OnInitializedAsync()
     {
        totalNumberOfUsers = await AdminManager.GetTotalNumberOfUsers();
+        posts = new List<int>();
     }
 
     private void OpenUsersView()
     {
         tableRender = @<Animate Animation="Animations.ZoomIn">
-                                 <AdminTable TotalElementsNumber="@totalNumberOfUsers" PageElementsNumber="1"/>
+                                 <AdminTable TotalElementsNumber="@totalNumberOfUsers" PageElementsNumber="3"/>
                              </Animate>;
     }
 
-    private void OpenPostsView()
+    private async Task OpenPostsView()
     {
-        
+        posts = await AdminManager.GetPosts(5, posts.Count);
+        tableRender = @<div>
+                          @foreach (var post in posts)
+                          {
+                              <Post PostID="post"/>
+                          }
+                      </div>;
     }
 }

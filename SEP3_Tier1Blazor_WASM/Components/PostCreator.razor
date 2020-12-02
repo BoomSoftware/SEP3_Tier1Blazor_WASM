@@ -34,43 +34,43 @@
 @code {
 
     [Parameter]
-    public EventCallback<PostData> OnPostCreated { get; set; }
+    public EventCallback<int> OnPostCreated { get; set; }
+    
+    [CascadingParameter]
+    public ModalException ModalException { get; set;}
     
     private PostShortVersion postShortVersion;
+    private UserShortVersion currentLogged;
     private string postImgSrc;
     private bool isCreationProcess = false;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         postShortVersion = new PostShortVersion();
+        currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
     }
 
-    private async Task<Task> CreatePost()
+    private async Task CreatePost()
     {
-        postShortVersion.Owner = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+        postShortVersion.Owner = currentLogged;
         if (postImgSrc == null || !postImgSrc.Equals(""))
             postShortVersion.HasImage = false;
         else
             postShortVersion.HasImage = true;
-        try
-        {
-            int newPostId = await PostManager.AddNewPost(postShortVersion);
-            return OnPostCreated.InvokeAsync(await PostManager.GetPostById(newPostId));
+        try{
+            await OnPostCreated.InvokeAsync(await PostManager.AddNewPost(postShortVersion));
+            postShortVersion = new PostShortVersion();
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
+        catch{
+             ModalException.Open();
         }
-        return null;
     }
 
     private async Task OnInputFileChanged(IFileListEntry[] files)
     {
         byte[] postImage = await FileUpload.ConvertFile(files.FirstOrDefault());
         postShortVersion.Picture = postImage;
-
         postImgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(postImage));
-
         StateHasChanged();
     }
 

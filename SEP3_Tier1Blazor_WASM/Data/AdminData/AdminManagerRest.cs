@@ -7,14 +7,14 @@ using SEP3_Tier1Blazor_WASM.Models;
 
 namespace SEP3_Tier1Blazor_WASM.Data.AdminData
 {
-    public class AdminManagerRest : IAdminManager
+    public class AdminManagerRest : DataManager, IAdminManager
     {
         private HttpClient httpClient;
         private string uri;
 
         public AdminManagerRest()
         {
-            httpClient = new HttpClient();
+            httpClient = Client;
             uri = "http://localhost:8080/admin";
         }
         
@@ -27,11 +27,11 @@ namespace SEP3_Tier1Blazor_WASM.Data.AdminData
             return users;
         }
 
-        public async Task<IList<PostShortVersion>> GetPosts(int number, int offset)
+        public async Task<List<int>> GetPosts(int number, int offset)
         {
-            string result = await httpClient.GetStringAsync($"posts/{uri}/?????????");
+            string result = await httpClient.GetStringAsync($"{uri}/posts?limit={number}&offset={offset}");
 
-            IList<PostShortVersion> posts = JsonSerializer.Deserialize<IList<PostShortVersion>>(result);
+            List<int> posts = JsonSerializer.Deserialize<List<int>>(result);
 
             return posts;
         }

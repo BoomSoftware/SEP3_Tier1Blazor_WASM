@@ -1,0 +1,64 @@
+﻿@using SEP3_Tier1Blazor_WASM.Authentication
+@inject AuthenticationStateProvider Authentication
+@inject NavigationManager NavigationManager
+
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modal title</h5>
+            </div>
+            <div class="modal-body">
+                Connection to the server has been lost unexpectedly. You will be automatically logged out. Please try again in a few minutes.
+                <button @onclick=ConfirmException>Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+@code {
+
+    private string ModalDisplay = "none;";
+    private string ModalClass = "";
+    private bool ShowBackdrop = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    public void Open()
+    {
+        ModalDisplay = "block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+        StateHasChanged();
+    }
+    
+    public void Close()
+    {
+        ModalDisplay = "none";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+    }
+
+    private void ConfirmException()
+    {
+        Close();
+        ((CustomAuthenticationStateProvider)Authentication).Logout();
+        NavigationManager.NavigateTo("/");
+        StateHasChanged();
+    }
+}
+
+@code {
+
+}

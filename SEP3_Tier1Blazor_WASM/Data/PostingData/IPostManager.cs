@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using SEP3_Tier1Blazor_WASM.Models;
+using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Data.PostingData
 {
@@ -8,11 +9,17 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
     {
         Task<int> AddNewPost(PostShortVersion post);
         Task RemovePost(int id);
-        Task EditPost(PostData editedPost);
-        Task<PostData> GetPostById(int id);
-        Task<List<PostData>> GetUserPosts(int userId);
-        Task AddCommentToPost(Comment comment, int postId);
-        Task RemoveCommentFromPost(int commentId, int postId);
+        Task EditPost(PostShortVersion postShortVersion);
+        Task<PostShortVersion> GetPostById(int postId, int userId);
+        Task<int> AddCommentToPost(int postId, Comment comment);
+        Task RemoveCommentFromPost(int postId);
+        Task<List<int>> GetPostByUser(int userId, int offset);
+        Task<List<UserShortVersion>> GetPostReactions(int postId);
+        Task<List<Comment>> GetPostComments(int postId);
+        Task InteractWithPost(int postId, int userId, UserActionTypes actionType, bool value);
+
+        Task<List<int>> GetPostsForUser(int userId, int offset);
+
 
     }
 }

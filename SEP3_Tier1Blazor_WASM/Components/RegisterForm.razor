@@ -107,10 +107,10 @@
     {
          <EditForm Model="@User" OnValidSubmit="EditPassword">
           
-            <InputText type="password" class="form-input" placeholder="New Password"@bind-Value="User.Password" @onclick=HideResult />
+            <InputText type="password" class="form-input" placeholder="New Password" @bind-Value="User.Password" @onclick=HideResult />
             <InputText type="password" class="form-input" placeholder="New Password Confirmation" style="border-bottom: 5px;" @bind-Value="passwordConfirmation" @onclick=HideResult />
 
-            <input type="submit" style="margin-top: 0px" class="form-button" value="Create Account"/>
+            <input type="submit" style="margin-top: 0px" class="form-button" value="Change Password"/>
             <div style="padding: 20px">@((MarkupString) resultInformation)</div>
         </EditForm>
     }
@@ -118,6 +118,8 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    public ModalException ModalException { get; set; }
 
     [Parameter]
     public string AccountType { get; set; }
@@ -172,47 +174,62 @@
     {
         if (AccountType.Equals("RegularUser"))
             User.Name = firstName + " " + lastName;
+        
+            bool result = await UserManger.AddNewUser(User);
+            if (result)
+                resultInformation = "<span class='info-message' style='color:green;'>Account successfully created!</span>";
+            else
+                resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
+            StateHasChanged();
 
-        bool result = await UserManger.AddNewUser(User);
 
-        if (result)
-            resultInformation = "<span class='info-message' style='color:green;'>Account successfully created!</span>";
-        else
-            resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
-        StateHasChanged();
-
-    }
+        }
 
     private async Task EditAccount()
     {
+        try
+        {
+            bool result = await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
+            await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
 
-      
-        
-        bool result = await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync())); await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
-        
-        if (result)
-            resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
-        else
-            resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
+            if (result)
+                resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
+            else
+                resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+       
     }
 
     private async Task EditPassword()
     {
-          if (User.Password != null)
+        try
+        {
+            if (User.Password != null)
+            {
+                if (User.Password.Equals(passwordConfirmation))
                 {
-                    if (User.Password.Equals(passwordConfirmation))
-                    {
-                        bool result = await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync())); await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
-                        if (result)
-                            resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
-                        else
-                            resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
-                    }
+                    bool result = await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
+                    await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
+                    if (result)
+                        resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
                     else
-                    {
-                        resultInformation = "<span class='info-message' style='color:red;'>Passwords are not the same</span>";
-                    }
+                        resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
                 }
+                else
+                {
+                    resultInformation = "<span class='info-message' style='color:red;'>Passwords are not the same</span>";
+                }
+            }
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+         
     }
 
     private void HideResult()

@@ -3,31 +3,57 @@
 @using SEP3_Tier1Blazor_WASM.Data.UserData
 @using SEP3_Tier1Blazor_WASM.Models
 @using System.ComponentModel
+@using System.Diagnostics.Tracing
 @using System.Text.Json
 @using SEP3_Tier1Blazor_WASM.Authentication
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider Authentication
+@inject IUserManger UserManger
 @inject IJSRuntime JS;
+
+
 <audio id="notificationSound" src="/sound/notification.mp3"/>
-<nav class="mb-1 navbar navbar-expand-lg navbar-dark secondary-color lighten-1">
-    <a class="navbar-brand" href="#">Navbar</a>
+
+<nav class="mb-1 navbar navbar-expand-lg navbar-dark secondary-color lighten-1 main-navbar">
+    <a class="navbar-brand" href="#">
+        <img src="/img/logo.png" width="75" height="75" class="link" @onclick=HomeNavigation>
+    </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent-555"
             aria-controls="navbarSupportedContent-555" aria-expanded="false" aria-label="Toggle navigation" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="#">
-                    Home
-                    <span class="sr-only">(current)</span>
-                </a>
-            </li>
-           
-            <li class="nav-item avatar dropdown">
-                <a class="nav-link dropdown-toggle" @onclick=ToggleNotificationMenu data-toggle="dropdown"
+            <li class="nav-item avatar dropdown without-focus-style " tabindex="0" @onfocusout="@(() => collapseNotification = false)">
+                <a class="nav-link link" data-toggle="dropdown"
                    aria-haspopup="true" aria-expanded="false">
-                    Notifications @notificationsModels.Count
+                    <input placeholder="Search" type="text" @bind-value="@searchValue" @bind-value:event="oninput" @onkeyup="@OnSearchUser"/>
+                </a>
+                <div class="@SearchCssClass">
+                    @foreach (var user in foundUsers)
+                    {
+                        <a class="dropdown-item link" @onclick=@(e => OpenSearchUserProfile(user.FullName, user.UserId))>@user.FullName</a>
+                    }
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link link" @onclick=SchedulerNavigation>Scheduler</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link link" @onclick=DietNavigation>Diets</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link link" @onclick=ChatNavigation>Chat</a>
+            </li>
+
+
+        </ul>
+        <ul class="navbar-nav ml-auto nav-flex-icons">
+            <li class="nav-item avatar dropdown without-focus-style " tabindex="0" @onfocusout="@(() => collapseNotification = false)">
+                <a class="nav-link link" @onclick=ToggleNotificationMenu data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    @notificationRender
+                    <span class="nav-notification">@notificationsModels.Count</span>
                 </a>
                 <div class="@NotificationsCssClass">
                     @foreach (var notification in notificationsModels)
@@ -36,37 +62,19 @@
                     }
                 </div>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Pricing</a>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false">
-                    Dropdown
-                </a>
-                <div class="dropdown-menu dropdown-secondary" aria-labelledby="navbarDropdownMenuLink-555">
-                    <a class="dropdown-item" href="#">Action</a>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <a class="dropdown-item" href="#">Something else here</a>
-                </div>
-            </li>
-        </ul>
-        <ul class="navbar-nav ml-auto nav-flex-icons">
-            <li class="nav-item">
-                <a class="nav-link waves-effect waves-light">
-                    <i class="fas fa-envelope"></i>
-                </a>
-            </li>
             @if (avatarSrc != null)
             {
-                <li class="nav-item avatar dropdown">
-                    <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                <li class="nav-item avatar dropdown without-focus-style " tabindex="0" @onfocusout="@(() => collapseAvatarMenu = false)">
+                    <a class="nav-link link" data-toggle="dropdown"
                        aria-haspopup="true" aria-expanded="false">
                         <img src=@avatarSrc class="rounded-circle z-depth-0"
-                             alt="avatar image" width="100" height="100" @onclick=ToggleAvatarMenu>
+                             alt="avatar image" width="50" height="50" @onclick=ToggleAvatarMenu @onfocusout=FocusOut>
                     </a>
-                    <div class="@AvatarMenuCssClass">
-                        <a class="dropdown-item" @onclick=OpenProfileView>Profile</a>
+                    <div class="@AvatarMenuCssClass" @onfocusout=FocusOut>
+                        <a class="dropdown-item" @onclick=OpenProfileView
+                           autofocus>
+                            Profile
+                        </a>
                         <a class="dropdown-item" @onclick=OpenEditAccountView>Edit Account</a>
                         <a class="dropdown-item" @onclick=Logout>Logout</a>
                     </div>
@@ -78,36 +86,57 @@
 </nav>
 
 @code {
-    private string searchValue;
-    private RenderFragment CustomRender { get; set; }
+    private string searchValue { get; set; }
+    private RenderFragment CustomRender;
+    private RenderFragment notificationRender;
     bool searchVisible = false;
     private IList<User> users;
     private string avatarSrc;
     private IList<NotificationModel> notificationsModels;
     private UserShortVersion loggedUser;
+    private List<SearchBarUser> foundUsers;
 
     bool collapseNavMenu = true;
     bool collapseAvatarMenu = false;
     bool collapseNotification = false;
+    bool collapseSearch = false;
 
     string baseMenuClass = "navbar-collapse";
     string baseAvatarMenuClass = "dropdown-menu dropdown-menu-lg-right dropdown-secondary";
+    string baseSearchCss = "dropdown-menu dropdown-menu-lg-right dropdown-secondary pre-scrollable search-dropdown";
     string baseNotificationMenuClass = "dropdown-menu dropdown-menu-lg-right dropdown-secondary pre-scrollable notification-dropdown";
 
     string NotificationsCssClass => baseNotificationMenuClass + (collapseNotification ? " show" : "");
     string NavMenuCssClass => baseMenuClass + (collapseNavMenu ? " collapse" : "");
     string AvatarMenuCssClass => baseAvatarMenuClass + (collapseAvatarMenu ? " show" : "");
-
+    string SearchCssClass => baseSearchCss + (collapseSearch ? " show" : "");
 
     protected override async Task OnInitializedAsync()
     {
+        foundUsers = new List<SearchBarUser>();
         notificationsModels = new List<NotificationModel>();
+
+        if (!notificationsModels.Any())
+        {
+            notificationRender = @<svg width="1em" height="10px" viewBox="0 0 16 16" class="bi bi-bell nav-notification-img" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                     <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2z"/>
+                                     <path fill-rule="evenodd" d="M8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
+                                 </svg>;
+        }
+
+        else
+        {
+            notificationRender = @<svg width="10px" height="10px" viewBox="0 0 16 16" class="bi bi-bell-fill nav-notification-img" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                     <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"/>
+                                 </svg>;
+        }
+        
         if (loggedUser == null)
         {
             loggedUser = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
-
             await JS.InvokeVoidAsync("connect", DotNetObjectReference.Create(this), loggedUser.UserId);
         }
+        await LoadNotifications();
         avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(loggedUser.Avatar));
 
 
@@ -137,19 +166,27 @@
         collapseAvatarMenu = !collapseAvatarMenu;
     }
 
+    private void ToggleSearch()
+    {
+        collapseSearch = !collapseSearch;
+    }
+
     private void ToggleNotificationMenu()
     {
-        collapseNotification = !collapseNotification;
+        if (notificationsModels.Any())
+            collapseNotification = !collapseNotification;
     }
 
     private void OpenEditAccountView()
     {
+        ToggleAvatarMenu();
         NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/edit");
     }
 
     private void OpenProfileView()
     {
-        NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/");
+        ToggleAvatarMenu();
+        NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/", true);
     }
 
 
@@ -159,7 +196,7 @@
         NotificationModel notificationModel = JsonSerializer.Deserialize<NotificationModel>(notification);
         notificationModel.Content = "sent you a friend invitation";
 
-        notificationsModels.Insert(0,notificationModel);
+        notificationsModels.Insert(0, notificationModel);
         Console.WriteLine("Blazor" + notification);
 
         await NotificationReceived();
@@ -177,6 +214,93 @@
     {
         await JS.InvokeAsync<string>("playNotificationSound");
         await JS.InvokeAsync<string>("updatePageTitle", notificationsModels.Count);
+        notificationRender = @<svg width="1em" height="10px" viewBox="0 0 16 16" class="bi bi-bell-fill nav-notification-img" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                 <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.995-14.901a1 1 0 1 0-1.99 0A5.002 5.002 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901z"/>
+                             </svg>;
+    }
+
+    private void FocusOut()
+    {
+        Console.WriteLine("focus out");
+    }
+
+    private void HomeNavigation()
+    {
+        NavigationManager.NavigateTo("/", true);
+    }
+
+    private void SchedulerNavigation()
+    {
+        NavigationManager.NavigateTo("/scheduler");
+    }
+
+    private void DietNavigation()
+    {
+        NavigationManager.NavigateTo("/diet");
+    }
+
+    private void ChatNavigation()
+    {
+        NavigationManager.NavigateTo("/chat");
+    }
+
+    private async Task OnSearchUser(KeyboardEventArgs e)
+    {
+        if (!searchValue.Equals(""))
+        {
+            await SendSearchRequest();
+        }
+        else
+        {
+            collapseSearch = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable("ShowSearchbarUsers")]
+    public async Task ShowSearchbarUsers(string usersSearchbar)
+    {
+        List<SearchBarUser> searchBarUsers = JsonSerializer.Deserialize<List<SearchBarUser>>(usersSearchbar);
+        
+        foundUsers = new List<SearchBarUser>();
+        foundUsers = searchBarUsers;
+
+        if (!foundUsers.Any())
+            collapseSearch = false;
+        else
+            collapseSearch = true;
+        StateHasChanged();
+        Console.WriteLine(foundUsers.Count);
+    }
+
+    private void OpenSearchUserProfile(string name, int id)
+    {
+        string uri = StaticFunctions.GetUserUri(name);
+        NavigationManager.NavigateTo($"profile/{uri}.{id}/", true);
+    }
+
+    private async Task SendSearchRequest()
+    {
+        FilterUserRequest filterUserRequest = new FilterUserRequest
+        {
+            SenderId = loggedUser.UserId,
+            QueryString = searchValue
+        };
+        await JS.InvokeAsync<string>("sendSearchValue", JsonSerializer.Serialize(filterUserRequest));
+    }
+
+    private async Task LoadNotifications()
+    {
+        List<NotificationModel> temp = await UserManger.GetNotificationsForUser(loggedUser.UserId);
+        if (temp.Count > 0)
+        {
+            foreach (var not in temp)
+            {
+                notificationsModels.Add(not);
+            }
+        }
+        
+        StateHasChanged();
     }
 
 }

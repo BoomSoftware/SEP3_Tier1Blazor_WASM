@@ -1,8 +1,16 @@
 ﻿@inherits LayoutComponentBase
 
+<ModalException @ref=@modalException/>
 <div class="container-fluid">
     <AuthorizeView Policy="User">
         <WallNavBar/>
     </AuthorizeView>
+    <CascadingValue Value="modalException">
     @Body
+    </CascadingValue>
 </div>
+
+@code{
+    ModalException modalException { get; set; }
+
+}

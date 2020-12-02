@@ -6,10 +6,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using SEP3_Tier1Blazor_WASM.Models;
+using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Data.PostingData
 {
-    public class PostManagerRest : IPostManager
+    public class PostManagerRest : DataManager, IPostManager
     {
         
         private HttpClient client;
@@ -17,7 +18,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
         
         public PostManagerRest()
         {
-            client = new HttpClient();
+            client = Client;
             uri = "http://localhost:8080/posts";
         }
         
@@ -33,61 +34,105 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
             return int.Parse(await response.Content.ReadAsStringAsync());
         }
 
-        public Task RemovePost(int id)
+        public async Task RemovePost(int id)
         {
-            throw new System.NotImplementedException();
+            await client.DeleteAsync($"{uri}/{id}");
         }
 
-        public Task EditPost(PostData editedPost)
+        public async Task EditPost(PostShortVersion postShortVersion)
         {
-            throw new System.NotImplementedException();
+            string postSerialized = JsonSerializer.Serialize(postShortVersion);
+            StringContent content = new StringContent(
+                postSerialized,
+                Encoding.UTF8,
+                "Application/json"
+                );
+            await client.PutAsync($"{uri}/{postShortVersion.Id}", content);
         }
 
-        public async Task<PostData> GetPostById(int id)
+        public async Task<PostShortVersion> GetPostById(int postId, int userId)
         { 
-            HttpResponseMessage result = await client.GetAsync($"{uri}/{id}");
+            HttpResponseMessage result = await client.GetAsync($"{uri}?postId={postId}&userId={userId}");
+            
             string responseString = await result.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<PostData>(responseString);
-
-            // List<Comment> comments = new List<Comment>();
-            //
-            // UserShortVersion user1 = new UserShortVersion
-            // {
-            //     AccountType = "RegularUser",
-            //     UserFullName = "Oliver Queen",
-            //     UserId = 1,
-            //     Avatar = new byte[] {}
-            // };
-            // comments.Add(new Comment{Id = 0, Content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ex neque, ornare egestas dignissim ut, condimentum vel risus. Aenean eget posuere elit. Suspendisse commodo id nunc id cursus. Maecenas facilisis arcu ac tellus aliquet, et cursus purus interdum. Nunc vitae dolor vitae lectus tincidunt laoreet. Suspendisse nec egestas dolor. ", Owner = user});
-            // comments.Add(new Comment{Id =1, Content = "Omg! That's crazy", Owner = user1});
-            //
-            //
-            // return  new PostData
-            // {
-            //     Title = "New training available!",
-            //     Content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ex neque, ornare egestas dignissim ut, condimentum vel risus. Aenean eget posuere elit. Suspendisse commodo id nunc id cursus. Maecenas facilisis arcu ac tellus aliquet, et cursus purus interdum. Nunc vitae dolor vitae lectus tincidunt laoreet. Suspendisse nec egestas dolor. ",
-            //     CreationTime = DateTime.Now,
-            //     LikeNumber = 34,
-            //     Comments = comments,
-            //     Id = 0,
-            //     Owner = user
-            // };
-            //throw new System.NotImplementedException();
+            return JsonSerializer.Deserialize<PostShortVersion>(responseString);
         }
 
-        public Task<List<PostData>> GetUserPosts(int userId)
+        public async Task<int> AddCommentToPost(int postId, Comment comment)
         {
-            throw new System.NotImplementedException();
+            string commentSerialized = JsonSerializer.Serialize(comment);
+            StringContent content = new StringContent(
+                commentSerialized,
+                Encoding.UTF8,
+                "Application/json"
+                );
+
+           HttpResponseMessage response =  await client.PostAsync($"{uri}/{postId}", content);
+           return int.Parse(await response.Content.ReadAsStringAsync());
+
         }
 
-        public Task AddCommentToPost(Comment comment, int postId)
+        public async Task RemoveCommentFromPost(int commentId)
         {
-            throw new NotImplementedException();
+            await client.DeleteAsync($"{uri}/comments/{commentId}");
         }
 
-        public Task RemoveCommentFromPost(int commentId, int postId)
+        public async Task<List<int>> GetPostByUser(int userId, int offset)
         {
-            throw new NotImplementedException();
+            HttpResponseMessage result = await client.GetAsync($"{uri}/profile?byId={userId}&offset={offset}");
+
+            string temp = await result.Content.ReadAsStringAsync();
+            Console.WriteLine("FFFFFFFFFFFFFFFFFFFFFFFFFF" + temp);
+            if (!string.IsNullOrEmpty(temp))
+            {
+                string content = await result.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<int>>(content);
+            }
+                
+            return null;
+        }
+
+        public async Task<List<UserShortVersion>> GetPostReactions(int postId)
+        {
+            return JsonSerializer.Deserialize<List<UserShortVersion>>(await client.GetStringAsync($"{uri}/{postId}/likes"));
+        }
+
+        public async Task<List<Comment>> GetPostComments(int postId)
+        {
+            return JsonSerializer.Deserialize<List<Comment>>(await client.GetStringAsync($"{uri}/{postId}/comments"));
+        }
+
+        public async Task InteractWithPost(int postId, int userId, UserActionTypes actionType, bool value)
+        {
+            PostAction postAction = new PostAction
+            {
+                PostId = postId,
+                UserId = userId,
+                Value = value,
+                ActionType = actionType.ToString()
+            };
+
+            string actionSerialize = JsonSerializer.Serialize(postAction);
+            StringContent content = new StringContent(
+                actionSerialize,
+                Encoding.UTF8,
+                "Application/json"
+                );
+
+            await client.PostAsync($"{uri}/actions", content);
+
+
+        }
+
+        public async Task<List<int>> GetPostsForUser(int userId, int offset)
+        {
+            HttpResponseMessage response = await client.GetAsync($"{uri}/wall?forId={userId}&offset={offset}");
+            string temp = await response.Content.ReadAsStringAsync();
+            if (!string.IsNullOrEmpty(temp))
+            {
+                return JsonSerializer.Deserialize<List<int>>(temp);
+            }
+            return null;
         }
     }
 }

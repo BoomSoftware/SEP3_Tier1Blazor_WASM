@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -12,7 +10,7 @@ using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Data.UserData
 {
-    public class UserManagerRest : IUserManger
+    public class UserManagerRest : DataManager, IUserManger
     {
         private HttpClient client;
         private string uri;
@@ -20,7 +18,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
 
         public UserManagerRest()
         {
-            client = new HttpClient();
+            client = Client;
             uri = "http://localhost:8080/users";
         }
 
@@ -82,9 +80,59 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
             if (result.IsSuccessStatusCode)
             {
                 string responseString = await result.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<UserShortVersion>(responseString);
+                UserShortVersion user =  JsonSerializer.Deserialize<UserShortVersion>(responseString);
+                
+                
+                Console.WriteLine("TYPETYPETYPE"+user.AccountType);
+                return user;
             }
 
+            return null;
+        }
+        
+        public async Task<List<UserShortVersion>> GetUserFriends(int userId, int senderId, int offset)
+        {
+            return JsonSerializer.Deserialize<List<UserShortVersion>>(await client.GetStringAsync($"{uri}/{userId}/friends?senderId={senderId}&offset={offset}"));
+        }
+
+        public async Task InteractWithUser(int senderId, int receiverId, UserActionTypes actionType, bool value)
+        {
+            UserAction userAction = new UserAction
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId,
+                ActionType = actionType.ToString(),
+                Value = value
+            };
+
+            string actionSerialized = JsonSerializer.Serialize(userAction);
+            StringContent content = new StringContent(
+                actionSerialized,
+                Encoding.UTF8,
+                "Application/json");
+
+            await client.PostAsync($"{uri}/actions", content);
+        }
+
+        public async Task MarkNotificationAsRead(int notificationId)
+        {
+            await client.DeleteAsync($"{uri}/notifications/{notificationId}");
+        }
+
+        public async Task<List<NotificationModel>> GetNotificationsForUser(int userId)
+        {
+            return JsonSerializer.Deserialize<List<NotificationModel>>(await client.GetStringAsync($"{uri}/{userId}/notifications"));
+        }
+
+        public async Task<List<UserShortVersion>> GetGymsInTheCity(string city)
+        {
+            HttpResponseMessage result = await client.GetAsync($"{uri}/pages?city={city}");
+            string temp = await result.Content.ReadAsStringAsync();
+            
+            if (!string.IsNullOrEmpty(temp))
+            {
+                return JsonSerializer.Deserialize<List<UserShortVersion>>(temp);
+            }
             return null;
         }
 
@@ -104,16 +152,6 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
                 "Application/json");
             
             await client.PostAsync($"{uri}/actions", stringContent);
-        }
-
-        public Task SetAvatar(byte[] avatar)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task SetBackgroundImage(byte[] backgroundImage)
-        {
-            throw new NotImplementedException();
         }
     }
 }

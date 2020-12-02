@@ -29,18 +29,29 @@ namespace SEP3_Tier1Blazor_WASM.Shared
 
         public static UserShortVersion GetLoggedUser(AuthenticationState state)
         {
-            return new UserShortVersion
+            UserShortVersion user = new UserShortVersion
             {
                 UserId = Int32.Parse(state.User.Claims.First(c => c.Type.Equals("Id")).Value),
                 AccountType = state.User.Claims.First(c => c.Type.Equals("AccountType")).Value,
-                Avatar = Convert.FromBase64String(state.User.Claims.First(c => c.Type.Equals("Avatar")).Value),
                 UserFullName = state.User.Claims.First(c => c.Type.Equals("Name")).Value
             };
+            
+            if(!user.AccountType.Equals("Administrator"))
+            {
+                user.Avatar = Convert.FromBase64String(state.User.Claims.First(c => c.Type.Equals("Avatar")).Value);
+            }
+
+            return user;
         }
 
         public static int GetLoggedUserId(AuthenticationState state)
         {
             return Int32.Parse(state.User.Claims.First(c => c.Type.Equals("Id")).Value);
+        }
+        
+        public static string GetUserAvatar(UserShortVersion user)
+        {
+            return String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
         }
     }
 }

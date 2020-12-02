@@ -1,39 +1,78 @@
 ﻿@page "/FitnessWall"
-@attribute [Authorize]
+@attribute [Authorize("RegularUser")]
 @inject AuthenticationStateProvider Authentication
-
+@inject IPostManager PostManager
+@inject IJSRuntime JS
 
 <div class="container-fluid">
-    <div class="row">
+    <div class="row content-row">
         <CalendarCard/>
         <div class="col-6 offset-1">
-            <PostCreator OnPostCreated="NewPostCreated"/>
-            @foreach (var post in posts)
+            <PostCreator OnPostCreated=NewPostCreated />
+            @if (!reloadList)
             {
-                <Post PostID="post.Id"/>
+                foreach (var postId in tempPostsIds)
+                {
+                    <Post PostID="postId"/>
+                }
+            }
+
+            @foreach (var post in postsIds)
+            {
+                <Post PostID="post"></Post>
             }
         </div>
-        <div class="col-2">
+        <div class="col-1">
             avalialble users
         </div>
     </div>
-
 </div>
 
 
 @code {
-    List<PostData> posts;
 
-    private Post createdPost;
+    private List<int> tempPostsIds;
+    private List<int> postsIds;
+    private bool reloadList;
+    private int offset = 0;
 
     protected async override Task OnInitializedAsync()
     {
-        posts = new List<PostData>();
+        tempPostsIds = new List<int>();
+        postsIds = new List<int>();
+        await LoadPosts();
+        await JS.InvokeVoidAsync("initializeComponent", DotNetObjectReference.Create(this));
     }
 
-    private void NewPostCreated(PostData newPost)
+    private void NewPostCreated(int id)
     {
-        posts.Add(newPost);
+        reloadList = true;
+        StateHasChanged();
+
+        tempPostsIds.Insert(0, id);
+        reloadList = false;
+        StateHasChanged();
+    }
+
+    [JSInvokable("LoadMorePosts")]
+    public async Task LoadPosts()
+    {
+        List<int> temp = await PostManager.GetPostsForUser(StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()).UserId, postsIds.Count);
+        if (temp != null)
+        {
+            foreach (var post in temp)
+            {
+                postsIds.Add(post);
+            }
+            if (postsIds.Count > 0 && temp.Count != 0)
+            {
+                await JS.InvokeAsync<string>("setLastPostId", postsIds.ToList().Last());
+            }
+            else
+            {
+                await JS.InvokeAsync<string>("setLastPostId", null);
+            }
+        }
         StateHasChanged();
     }
 

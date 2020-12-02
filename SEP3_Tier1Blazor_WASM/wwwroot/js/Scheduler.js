@@ -1,6 +1,4 @@
-﻿window.addEventListener('resize',(resizeScheduler))
-
-
+﻿
 function getElementTop(elementId){
     return document.getElementById(elementId).getBoundingClientRect().top
 }
@@ -16,13 +14,10 @@ function getElementWidth(elementId){
 function getWindowWidth(){
     return window.innerWidth;
 }
-
 function getWindowHeight(){
     return window.innerHeight;
 }
 
-async function resizeScheduler(dotnet) {
-    await new Promise(r => setTimeout(r, 2000));
-    await dotnet.invokeMethodAsync('RefreshScheduler');
-    console.log("dotnet");
-}
+
+
+

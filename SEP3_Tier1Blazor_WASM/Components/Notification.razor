@@ -1,22 +1,32 @@
 ﻿@inject NavigationManager NavigationManager
-
+@inject IUserManger UserManger
 <a class="dropdown-item notification-item" @onclick=React>
     <h3 class="notification-sender">@Model.SenderName</h3>
     <p class="notification-content">@Model.Content</p>
 </a>
 @code {
+    [CascadingParameter] 
+    public ModalException ModalException { get; set; }
     
     [Parameter]
     public NotificationModel Model { get; set; }
 
 
-    private void React()
+    private async Task React()
     {
-        // delete notification
-        if (Model.ActionType.Equals(UserActionTypes.USER_FRIEND_REQUEST_SEND.ToString()))
+        try
         {
-            NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(Model.SenderName)}.{Model.SenderId}");
+            await UserManger.MarkNotificationAsRead(Model.Id);
+            if (Model.ActionType.Equals(UserActionTypes.USER_FRIEND_REQUEST_SEND.ToString()))
+            {
+                NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(Model.SenderName)}.{Model.SenderId}/", true);
+            }
         }
+        catch
+        {
+            ModalException.Open();
+        }
+        
     }
 
 }

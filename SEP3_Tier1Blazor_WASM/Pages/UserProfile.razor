@@ -1,16 +1,17 @@
-﻿@inject IUserManger UserManger
+﻿@page "/profile/{UserArgument}/"
+@attribute [Authorize]
+
+@inject IUserManger UserManger
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider Authentication
 @inject IFileUpload FileUpload
-
-@attribute [Authorize]
-@page "/profile/{UserArgument}/"
-
-@using SEP3_Tier1Blazor_WASM.Data
-@using SEP3_Tier1Blazor_WASM.Data.UserData
+@inject IPostManager PostManager
 @using System.Text.Json
+@using SEP3_Tier1Blazor_WASM.Authentication
 
+
+<ModalUserList @ref=@userListModal/>
 @if (user != null)
 {
     <div class="container">
@@ -21,12 +22,12 @@
         </header>
         <main>
             <div class="row">
-                <div class="left col-lg-4">
+                <div class="left col-lg-4" style="max-height: 500px;">
                     <div class="photo-left">
-                        <img class="profile-avatar" src=@avatarSrc />
+                        <img class="profile-avatar" src=@avatarSrc/>
                     </div>
                     <h4 class="name">@user.Name</h4>
-                    <p class="info">@user.City</p>
+                    <p class="info link" @onclick=ShowGymsInTheCity>@user.City</p>
 
                     @if (user.Address != null)
                     {
@@ -35,11 +36,32 @@
 
                     <div class="stats row">
                         <div class="stat col-xs-4" style="padding-right: 50px;">
-                            <p class="number-stat">####</p>
-                            <p class="desc-stat">Friends</p>
+                            <p class="number-stat">@user.FriendsNumber</p>
+                            @if (user.Address != null)
+                            {
+                                <p class="desc-stat link" @onclick=OpenFriendList>Followers</p>
+                            }
+                            else
+                            {
+                                if (!user.UserStatus[0])
+                                {
+                                    <AuthorizeView Resource="@id" Policy="CurrentLogged">
+                                        <NotAuthorized>
+                                            <p class="desc-stat link" @onclick=OpenFriendList>Common Friends</p>
+                                        </NotAuthorized>
+                                        <Authorized>
+                                            <p class="desc-stat link" @onclick=OpenFriendList>Friends</p>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                }
+                                else
+                                {
+                                    <p class="desc-stat link" @onclick=OpenFriendList>Friends</p>
+                                }
+                            }
                         </div>
                         <div class="stat col-xs-4">
-                            <p class="number-stat">####</p>
+                            <p class="number-stat">@posts.Count</p>
                             <p class="desc-stat">Posts</p>
                         </div>
                         <div class="stat col-xs-4" style="padding-left: 50px;">
@@ -50,130 +72,287 @@
                     <p class="desc">@user.Description</p>
                 </div>
                 <div class="right col-lg-8">
-                    <ul class="profile-nav">
-                        <li>Own Posts</li>
-                        <li>Liked Posts</li>
-                        <li>About</li>
-                    </ul>
-                    
-                    @if (user.UserStatus[0]){
-                        <span class="follow" @onclick=OnCancelFriendship>Cancel friendship</span>
-                    }
-                    @if (user.UserStatus[1]){
-                        <span class="follow" @onclick=OnConfirmFriendship>Confirm friendship</span>
-                    }
-                    else {
-                         <span class="follow" @onclick=OnAddNewFriend>Add Friend</span>
-                    }
+                    <div class="row profile-options-box">
+                        @if (!currentLogged.AccountType.Equals("Administrator"))
+                        {
+                            if (user.Address != null)
+                            {
+                                <AuthorizeView Policy="PageOwner">
+                                    <NotAuthorized>
+                                        @if (!user.UserStatus[5])
+                                        {
+                                            <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FOLLOW_PAGE, true))>Follow</button>
+                                        }
+                                        else
+                                        {
+                                            <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FOLLOW_PAGE, false))>Unfollow</button>
+                                        }
+
+                                    </NotAuthorized>
+                                </AuthorizeView>
+                            }
+
+                            if (user.Address == null)
+                            {
+                                if (user.UserStatus[0])
+                                {
+                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REMOVE, true))>Cancel friendship</button>
+                                }
+                                else if (user.UserStatus[6])
+                                {
+                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_RESPONSE, true))>Confirm friendship</button>
+                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_RESPONSE, false))>Discard friendship</button>
+                                }
+                                else if (user.UserStatus[1])
+                                {
+                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_SEND, false))>Cancel friend request</button>
+                                }
+                                else
+                                {
+                                    <AuthorizeView Resource="@id" Policy="CurrentLogged">
+                                        <NotAuthorized>
+                                            <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_SEND, true))>Add Friend</button>
+                                        </NotAuthorized>
+                                    </AuthorizeView>
+                                }
+                            }
+                        }
 
 
-
-
-                    <AuthorizeView Resource="@id" Policy="CurrentLogged">
-                        <span class="follow" @onclick=OnDeleteAccount>Delete Account</span>
-                    </AuthorizeView>
-                    
-                    
-                    
-                   
-                    @* <span class="follow" @onclick=OnReportUser>Report User</span> *@
-                    <div class="row gallery">
-                        @*                           @foreach(int postId in user.PostIds) *@
-                        @*                           { *@
-                        @*                               <div class="col-md-12"> *@
-                        @*                                   <Post PostID="1"/> *@
-                        @*                               </div> *@
-                        @*                           } *@
                     </div>
+                    @if (!currentLogged.AccountType.Equals("Administrator"))
+                    {
+                        <AuthorizeView Resource="@id" Policy="CurrentLogged">
+                            <Authorized>
+                                <button @onclick=OnDeleteAccount>Delete Account</button>
+                            </Authorized>
+                            <NotAuthorized>
+                                @if (user.UserStatus[2])
+                                {
+                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_REPORT, user.UserStatus[2]))>Cancel user report</button>
+                                }
+                                else
+                                {
+                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_REPORT, user.UserStatus[2]))>Report user</button>
+                                }
+                            </NotAuthorized>
+                        </AuthorizeView>
+
+                        <AuthorizeView Resource="@id" Policy="CurrentLogged">
+
+                            @if (currentLogged.AccountType.Equals("PageOwner"))
+                            {
+                                <PostCreator OnPostCreated="NewPostCreated"/>
+                            }
+                        </AuthorizeView>
+                    }
+
+
+
+                    @if (user.UserStatus[0] || user.Id == currentLogged.UserId || user.UserStatus[5])
+                    {
+                        if (!reloadPostList)
+                        {
+                            foreach (var post in posts)
+                            {
+                                <Post PostID="post" OnPostDelete="@LoadPosts"/>
+                            }
+                        }
+                    }
                 </div>
             </div>
         </main>
     </div>
-    
 }
 
 
 @code {
 
+    [CascadingParameter]
+    public ModalException ModalException { get; set; }
+
     [Parameter]
     public string UserArgument { get; set; }
 
+    private List<int> posts;
     private User user;
     private int id;
     private string avatarSrc;
     private string bgSrc;
+    private bool reloadPostList;
+    private ModalUserList userListModal;
+    private UserShortVersion currentLogged;
 
 
     protected override async Task OnInitializedAsync()
     {
+        await JS.InvokeVoidAsync("initializeComponent", DotNetObjectReference.Create(this));
+        posts = new List<int>();
         string[] tempUser = UserArgument.Split('.');
         if (tempUser.Length == 3)
             id = Int32.Parse(tempUser[2]);
         if (tempUser.Length == 2)
             id = Int32.Parse(tempUser[1]);
+        currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
 
-        user = await UserManger.GetUser(StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync()),id);
-        
+        try
+        {
+            user = await UserManger.GetUser(currentLogged.UserId, id);
+            await LoadPosts();
+
             avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
             bgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.ProfileBackground));
+        }
+        catch
+        {
+            ModalException.Open();
+        }
     }
 
-    private void OnDeleteAccount()
+    private async Task OnDeleteAccount()
     {
-        if (UserManger.RemoveUser(id).IsCompletedSuccessfully)
+        try
         {
+            await UserManger.RemoveUser(id);
+            ((CustomAuthenticationStateProvider) Authentication).Logout();
             NavigationManager.NavigateTo("/");
         }
-        else
+        catch
         {
-    //display error connection message
+            ModalException.Open();
         }
     }
-
-    private async Task OnAddNewFriend()
-    {
-        UserShortVersion currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
-        
-        UserAction friendRequest = new UserAction{ActionType = UserActionTypes.USER_FRIEND_REQUEST_SEND.ToString(), ReceiverId = user.Id, SenderId = currentLogged.UserId, SenderName = currentLogged.UserFullName, Value = true};
-        string serializedFriendRequest = JsonSerializer.Serialize(friendRequest);
-        await JS.InvokeVoidAsync("sendFriendRequest", serializedFriendRequest);
-        
-    }
-    //
-    // private void OnReportUser()
-    // {
-    //     if (UserManger.ReportUser(id).IsCompletedSuccessfully)
-    //     {
-    // //display successful message
-    //     }
-    //
-    //     else
-    //     {
-    // //display error connection message
-    //     }
-    
 
     private async Task OnInputFileChanged(IFileListEntry[] files)
     {
-        Console.WriteLine("+++++++++++++++++++++++++++++ size: " + files.FirstOrDefault().Data.Length);
-
         User editedUser = new User();
-        
         editedUser.Id = id;
         editedUser.ProfileBackground = await FileUpload.ConvertFile(files.FirstOrDefault());
-        
-        await UserManger.EditUser(editedUser, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
+
+        try
+        {
+            await UserManger.EditUser(editedUser, currentLogged);
+            StateHasChanged();
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+    }
+
+    private async Task OpenFriendList()
+    {
+        try
+        {
+            userListModal.Users = await UserManger.GetUserFriends(user.Id, currentLogged.UserId, 0);
+            userListModal.Title = $"{user.Name}'s friends";
+            userListModal.ListType = "FriendList";
+            userListModal.CurrentLoggedId = currentLogged.UserId;
+            userListModal.UserId = user.Id;
+            userListModal.Open();
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+    }
+
+    private async Task InteractWithUser(UserActionTypes action, bool value)
+    {
+        try
+        {
+            switch (action)
+            {
+                case UserActionTypes.USER_REPORT:
+                    await UserManger.InteractWithUser(currentLogged.UserId, user.Id, UserActionTypes.USER_REPORT, !value);
+                    user.UserStatus[2] = !value;
+                    break;
+                case UserActionTypes.USER_FRIEND_REMOVE:
+                    await UserManger.InteractWithUser(currentLogged.UserId, user.Id, UserActionTypes.USER_FRIEND_REMOVE, true);
+                    user.UserStatus[0] = false;
+                    user.FriendsNumber--;
+                    break;
+                case UserActionTypes.USER_FOLLOW_PAGE:
+                    await UserManger.InteractWithUser(currentLogged.UserId, user.Id, UserActionTypes.USER_FOLLOW_PAGE, value);
+                    user.UserStatus[5] = value;
+                    break;
+                case UserActionTypes.USER_FRIEND_REQUEST_SEND:
+                    await JS.InvokeVoidAsync("sendFriendRequest", JsonSerializer.Serialize(new UserAction {SenderId = currentLogged.UserId, ReceiverId = user.Id, ActionType = UserActionTypes.USER_FRIEND_REQUEST_SEND.ToString(), Value = value, SenderName = currentLogged.UserFullName}));
+    //await UserManger.InteractWithUser(currentLogged.UserId, user.Id, UserActionTypes.USER_FRIEND_REQUEST_SEND, value);
+                    user.UserStatus[1] = value;
+                    break;
+                case UserActionTypes.USER_FRIEND_REQUEST_RESPONSE:
+                    await UserManger.InteractWithUser(user.Id, currentLogged.UserId, UserActionTypes.USER_FRIEND_REQUEST_RESPONSE, value);
+                    if (value)
+                    {
+                        user.UserStatus[0] = true;
+                        user.FriendsNumber++;
+                    }
+
+                    else if (!value)
+                    {
+                        user.UserStatus[6] = false;
+                    }
+
+                    break;
+            }
+
+            StateHasChanged();
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+    }
+
+    private async Task ShowGymsInTheCity()
+    {
+        try
+        {
+            userListModal.Users = await UserManger.GetGymsInTheCity(user.City);
+            userListModal.Title = $"Gyms in the {user.City}";
+            userListModal.ListType = "GymsList";
+            userListModal.CurrentLoggedId = currentLogged.UserId;
+            userListModal.UserId = user.Id;
+            userListModal.Open();
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+    }
+
+    [JSInvokable("LoadMorePosts")]
+    public async Task LoadPosts()
+    {
+        List<int> temp = await PostManager.GetPostByUser(user.Id, posts.Count);
+        if (temp != null)
+        {
+            foreach (var post in temp)
+            {
+                posts.Add(post);
+            }
+            if (posts.Count > 0 && temp.Count != 0)
+            {
+                await JS.InvokeAsync<string>("setLastPostId", posts.ToList().Last());
+            }
+            else
+            {
+                await JS.InvokeAsync<string>("setLastPostId", null);
+            }
+        }
         StateHasChanged();
     }
-    
 
-    private async Task OnCancelFriendship()
+
+    private void NewPostCreated()
     {
-        
-    }
+        reloadPostList = true;
+        StateHasChanged();
 
-    private async Task OnConfirmFriendship(){
-        
+        posts.Insert(0, id);
+        reloadPostList = false;
+        StateHasChanged();
     }
 
 

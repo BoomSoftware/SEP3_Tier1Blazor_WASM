@@ -24,5 +24,10 @@ namespace SEP3_Tier1Blazor_WASM.Models
         public int CommentNumber { get; set; }
         [JsonPropertyName("hasImage")]
         public bool HasImage { get; set; }
+        [JsonPropertyName("postStatus")]
+        public bool[] PostStatus { get; set; }
+        
+        [JsonIgnore]
+        public List<Comment> Comments { get; set;} = new List<Comment>();
     }
 }

@@ -22,13 +22,7 @@ namespace SEP3_Tier1Blazor_WASM.Models
 
         [JsonPropertyName("description")]
         public string Description { get; set; }
-        
-        [JsonPropertyName("posts")]
-        public List<int> PostIds { get; set; } 
-        
-        [JsonPropertyName("likedPosts")]
-        public List<int> LikedPostIds { get; set;}
-        
+
         [JsonPropertyName("avatar")]
         public byte[] Avatar { get; set; }
         
@@ -40,10 +34,13 @@ namespace SEP3_Tier1Blazor_WASM.Models
 
         [JsonPropertyName("userStatus")] 
         public bool[] UserStatus { get; set; }
+        
+        [JsonPropertyName("relevantFriendsNumber")]
+        public int FriendsNumber { get; set;}
 
         public override string ToString()
         {
-            return Id + Name + Email + Password + Avatar + ProfileBackground + LikedPostIds + PostIds +
+            return Id + Name + Email + Password + Avatar + ProfileBackground +
                    Description;
         }
     }

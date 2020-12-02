@@ -53,7 +53,7 @@ namespace SEP3_Tier1Blazor_WASM
                         int commentOwnerId = int.Parse(ids[1]);
                         
                         if (idClaim == null || roleClaim == null) return true;
-                        return (int.Parse(idClaim.Value) == currentLoggedId && (roleClaim.Value.Equals("RegularUser")) || roleClaim.Value.Equals("PageOwner") || (int.Parse(idClaim.Value) == commentOwnerId && (roleClaim.Value.Equals("RegularUser"))));
+                        return (int.Parse(idClaim.Value) == currentLoggedId && (roleClaim.Value.Equals("RegularUser")) || roleClaim.Value.Equals("PageOwner") || (int.Parse(idClaim.Value) == commentOwnerId && (roleClaim.Value.Equals("RegularUser")))|| roleClaim.Value.Equals("Administrator"));
                     }));
                 
                 
@@ -69,6 +69,19 @@ namespace SEP3_Tier1Blazor_WASM
                     Claim roleClaim = context.User.FindFirst(claim => claim.Type.Equals("AccountType"));
                     if (roleClaim == null) return true;
                     return roleClaim.Value.Equals("RegularUser") || roleClaim.Value.Equals("PageOwner") ;
+                }));
+                
+                options.AddPolicy("RegularUser", a =>a.RequireAuthenticatedUser().RequireAssertion(context =>
+                {
+                    Claim roleClaim = context.User.FindFirst(claim => claim.Type.Equals("AccountType"));
+                    if (roleClaim == null) return true;
+                    return roleClaim.Value.Equals("RegularUser");
+                }));
+                options.AddPolicy("PageOwner", a =>a.RequireAuthenticatedUser().RequireAssertion(context =>
+                {
+                    Claim roleClaim = context.User.FindFirst(claim => claim.Type.Equals("AccountType"));
+                    if (roleClaim == null) return true;
+                    return roleClaim.Value.Equals("PageOwner") ;
                 }));
                 
                 

@@ -1,0 +1,20 @@
+﻿@inject NavigationManager NavigationManager
+
+    <div class="row list-user d-flex align-items-center" @onclick=@(e => OpenUserProfile(User.UserId, User.UserFullName))>
+        <img src=@StaticFunctions.GetUserAvatar(User) class="list-user-avatar">
+        <p class="list-user-name link">@User.UserFullName</p>
+    </div>
+
+@code {
+
+    [Parameter]
+    public UserShortVersion User { get; set; }
+    
+    
+    private void OpenUserProfile(int id, string name)
+    {
+        string uri = StaticFunctions.GetUserUri(name);
+        NavigationManager.NavigateTo($"profile/{uri}.{id}/", true);
+    }
+    
+}
