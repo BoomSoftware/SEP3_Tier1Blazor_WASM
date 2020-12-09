@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using SEP3_Tier1Blazor_WASM.Data.UserData;
-using SEP3_Tier1Blazor_WASM.Models;
+using SEP3_Tier1Blazor_WASM.Models.UserModels;
 
 namespace SEP3_Tier1Blazor_WASM.Authentication
 {
@@ -60,7 +58,7 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
                 identity = SetupClaimsForUser(currentLogged);
 
                 string serialisedData = JsonSerializer.Serialize(currentLogged);
-                jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentUser", serialisedData);
+                await jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentUser", serialisedData);
                 CachedUser = currentLogged;
             }
             catch (Exception e)
@@ -73,12 +71,14 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
                 Task.FromResult<AuthenticationState>(new AuthenticationState(new ClaimsPrincipal(identity))));
         }
 
-        public void Logout()
+        public async void Logout()
         {
             CachedUser = null;
             var user = new ClaimsPrincipal(new ClaimsIdentity());
-            jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentUser", "");
+            await jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentUser", "");
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
+            
+            //websocket request 
         }
 
         private ClaimsIdentity SetupClaimsForUser(UserShortVersion user)

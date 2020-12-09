@@ -2,16 +2,19 @@
 <div class="container-fluid">
     <LoginBar/>
     <div class="main">
-        <div class="row h-100 justify-content-md-center">
+        <div class="row h-100 justify-content-md-center content-row">
             <div class="col-lg-5 col-md-12 my-auto">
                 <h1 style="font-size: 38px">Select type of the account:</h1>
                 <button class="action-button purple @userPressedButton" @onclick=ShowUserForm><img src="/img/user.svg"></button>
                 <button class="action-button purple @companyPressedButton" @onclick=ShowCompanyForm><img src="/img/company.svg"></button>
             </div>
-            <div class="col-lg-5 col-md-12 text-center">
-                <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
-                    @registerFormRender
-                </Animate>
+            <div class="col-lg-5 col-md-12 text-center d-flex align-items-center">
+                <div style="height: 75vh">
+                     <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
+                                        @registerFormRender
+                                    </Animate>
+                </div>
+               
             </div>
         </div>
     </div>

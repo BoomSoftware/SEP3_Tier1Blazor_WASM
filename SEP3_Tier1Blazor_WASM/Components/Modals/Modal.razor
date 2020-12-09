@@ -1,37 +1,126 @@
-﻿<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+﻿@using SEP3_Tier1Blazor_WASM.Data.TrainingData
+@using System.Globalization
+
+@inject ITrainingManager TrainingManager
+@inject IUserManger UserManger
+@inject AuthenticationStateProvider Authentication
+
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
     <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
+        <div class="modal-content" style="overflow: auto">
             <div class="modal-header">
-                <h5 class="modal-title">Modal title</h5>
-                <button type="button" class="close" @onclick=Close>
-                    <span aria-hidden="true">&times;</span>
+                @if (!isEditMode)
+                {
+                    if (TrainingModel.IsPublic)
+                    {
+                        <label class="text-muted" style="font-size: 11px;margin-right: 5px;">Public</label>
+                    }
+                    else
+                    {
+                        <label class="text-muted" style="font-size: 11px; margin-right: 5px;">Private</label>
+                    }
+                    <br>
+                    <h5 class="modal-title">@TrainingModel.Title</h5>
+                }
+                else
+                {
+                    <input type="text" @bind="editedTraining.Title"/>
+                }
+
+
+                <button type="button" class="close">
+                    @if (IsOwner)
+                    {
+                        <button class="btn btn-sm btn-dark" @onclick=EnableEditMode>Edit</button>
+                        <button class="btn btn-sm btn-dark" @onclick=OnDeleteTraining>Delete</button>
+                    }
                 </button>
+
             </div>
             <div class="modal-body">
+                <div class="training-info">
+                    @if (IsOwner)
+                    {
+                        <div>
+                            @if (TrainingModel.IsCompleted)
+                            {
+                                <label>Training completed</label>
+                            }
+                            else
+                            {
+                                <label>Complete</label>
+                                <input type="checkbox" @bind="TrainingModel.IsCompleted" @onclick="MakeTrainingComplete"/>
+                            }
+                        </div>
+                    }
+
+
+                    @if (!isEditMode)
+                    {
+                        <div>
+                            <h7 class="sub-title">Type: @TrainingModel.Type</h7>
+                        </div>
+                        <div>
+                            <h7 class="">Duration: @TrainingModel.DurationInMinutes min</h7>
+                        </div>
+                    }
+                    else
+                    {
+                        <div>
+                            <input type="text" @bind="editedTraining.Type"/>
+                        </div>
+                        <div>
+                            <input type="number" @bind="editedTraining.DurationInMinutes"/>
+                        </div>
+                    }
+
+
+                </div>
+
+
                 @foreach (var exercise in exercises)
                 {
-                    SearchForVideo(exercise.Description);
-                    
-                    <div class="calendar-card">
-                        <div class="row date-box d-flex align-items-center date-box">
-                            <h7 class="text-muted">@exercise.Type</h7>
-                            <h4 class="date-title col-12">@exercise.Title</h4>
-                            <p class="date training-time col-12">
-                                @exercise.Description
-                                
-                                @if (videos.Any())
-                                {
-                                    foreach (var video in videos)
-                                    {
-                                        <iframe class="img-fluid" src="@video"></iframe>
-                                    }
-                                }
-                            </p>
-                        </div>
-                    </div>
+                    <Exercise ExerciseModel="@exercise" trainingId="@TrainingModel.Id" IsOwner="@IsOwner"/>
                 }
             </div>
+
+            @if (IsOwner)
+            {
+                <div class="">
+                    <div class="" style="width: 50%; margin: auto; text-align: center">
+                        <label>Add new exercise </label><button class="toggle-button" @onclick=ToggleCreator>+</button>
+                    </div>
+
+                    @if (isAddingMode)
+                    {
+                        <EditForm Model="newExercise" OnValidSubmit="CreateNewExercise">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            
+                            <div style="margin-left: 10px">
+                                <div >
+                                    <label>Title</label><InputText type="text" @bind-Value="newExercise.Title"/>
+                                </div>
+                                <div>
+                                    <label>Description</label><InputText type="text" @bind-Value="newExercise.Description"/>
+                                </div>
+
+                                <button class="btn btn-sm btn-dark" type="submit">Create</button>
+                            </div>
+
+                        </EditForm>
+                    }
+
+                </div>
+            }
+
             <div class="modal-footer">
+                @if (isEditMode)
+                {
+                    <button class="btn btn-sm btn-dark" @onclick="ConfirmEdit">Confirm</button>
+                    <button class="btn btn-sm btn-dark" @onclick="CancelEdit">Cancel</button>
+                    <label style="color: red">@errorMessage</label>
+                }
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick=Close>Close</button>
             </div>
         </div>
@@ -47,22 +136,34 @@
 
 @code {
 
-    [Parameter]
-    public TrainingModel TrainingModel { get; set; }
 
+    [Parameter]
+    public int TrainingId { get; set; }
+
+    [Parameter]
+    public bool IsOwner { get; set; }
+
+    [Parameter]
+    public EventCallback<int> DeleteTrainingEvent { get; set; }
+
+    private TrainingWithOwner TrainingModel;
+    private TrainingWithOwner editedTraining = new TrainingWithOwner();
+    private bool isEditMode;
     private string ModalDisplay = "none;";
     private string ModalClass = "";
     private bool ShowBackdrop = false;
     private List<ExerciseModel> exercises;
-    private List<string> videos;
+    private ExerciseModel newExercise = new ExerciseModel();
+    private UserShortVersion currentLogged;
+    private bool isAddingMode;
+    private string errorMessage = "";
 
     protected override async Task OnInitializedAsync()
     {
-    //get exercises for training;
+        currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+        TrainingModel = new TrainingWithOwner();
+        TrainingModel.Exercises = new List<ExerciseModel>();
         exercises = new List<ExerciseModel>();
-        exercises.Add(new ExerciseModel {Description = "Amazing exercise, 5 series each 3min and 1min break. Do perfect pushups with a straight back.", Title = "Powerful Pushups", Type = "Strong"});
-        exercises.Add(new ExerciseModel {Description = "Amazing exercise, 5 series each 3min and 1min break. Do perfect pushups with a straight back. Link: https://www.youtube.com/watch?v=IODxDxX7oi4", Title = "Powerful Pushups", Type = "Strong"});
-        exercises.Add(new ExerciseModel {Description = "Amazing exercise, 5 series each 3min and 1min break. Do perfect pushups with a straight back. Link: https://www.youtube.com/watch?v=IODxDxX7oi4", Title = "Powerful Pushups", Type = "Strong"});
     }
 
     public void Open()
@@ -78,22 +179,114 @@
         ModalDisplay = "none";
         ModalClass = "";
         ShowBackdrop = false;
+        isAddingMode = false;
+        isEditMode = false;
         StateHasChanged();
     }
 
-    private void SearchForVideo(string description)
+    private void EnableEditMode()
     {
-       string[] words = description.Split(" ");
-        videos = new List<string>();
-        foreach (var word in words)
+        isEditMode = true;
+        editedTraining = TrainingModel;
+        StateHasChanged();
+    }
+
+    private async Task OnDeleteTraining()
+    {
+        try
         {
-            if (word.Contains("www.youtube.com"))
-            {
-                string newWord = word.Replace("watch?v=", "embed/");
-                videos.Add(newWord);
-            }
+            await TrainingManager.DeleteTraining(TrainingModel.Id);
+            await DeleteTrainingEvent.InvokeAsync(TrainingModel.Id);
+            Close();
+        }
+        catch
+        {
         }
     }
 
+    private async Task ConfirmEdit()
+    {
+        try
+        {
+            if (ValidateEdit())
+            {
+                 await TrainingManager.EditTraining(editedTraining);
+                TrainingModel = editedTraining;
+                isEditMode = false;
+            }
+           
+        }
+        catch
+        {
+        }
+    }
+
+    private void CancelEdit()
+    {
+        isEditMode = false;
+        StateHasChanged();
+    }
+
+    private async Task CreateNewExercise()
+    {
+        try
+        {
+            int tempId = await TrainingManager.AddExerciseToTraining(TrainingId, newExercise);
+            newExercise.Id = tempId;
+            exercises.Add(newExercise);
+            StateHasChanged();
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task MakeTrainingComplete()
+    {
+        try
+        {
+            TrainingModel.IsCompleted = true;
+            await TrainingManager.EditTraining(TrainingModel);
+            await UserManger.IncrementScore(currentLogged.UserId, 10);
+            StateHasChanged();
+        }
+        catch
+        {
+        }
+    }
+
+
+    public async Task LoadTraining()
+    {
+        TrainingModel = await TrainingManager.GetTrainingById(TrainingId);
+        exercises = TrainingModel.Exercises;
+    }
+
+    private void ToggleCreator()
+    {
+        isAddingMode = !isAddingMode;
+    }
+
+    private bool ValidateEdit()
+    {
+        if (String.IsNullOrEmpty(editedTraining.Title))
+        {
+            errorMessage = "Title can not be empty";
+            return false;
+        }
+
+        if (String.IsNullOrEmpty(editedTraining.Type))
+        {
+            errorMessage = "Type can not be empty";
+            return false;
+        }
+        
+        if (editedTraining.DurationInMinutes < 0 && editedTraining.DurationInMinutes > 540)
+        {
+            errorMessage = "Duration time must be between 1 and 540";
+            return false;
+        }
+        return true;
+    }
 
 }

@@ -1,0 +1,75 @@
+﻿@inject ITrainingManager TrainingManager
+@inject AuthenticationStateProvider Authentication
+@inject IUserManger UserManager
+
+@using System.Globalization
+@using SEP3_Tier1Blazor_WASM.Data.TrainingData
+
+
+<div class="calendar-card col-2 h-100">
+    <div class="row">
+        <h2 class="title col-12">Welcome</h2>
+        <h4 class="sub-title col-12 text-muted">Plan for today</h4>
+    </div>
+    <div class="row date-box">
+        <h3 class="col-12 date-title">Today</h3>
+        <h4 class="col-9 date">@today</h4>
+    </div>
+
+    
+    <h4 class="training-subtitle">Upcoming Trainings</h4>
+    
+     @foreach (var training in trainings)
+        {
+            <div class="row date-box d-flex align-items-center">
+                <h4 class="date-title col-9">@training.Title</h4>
+                <div class="duration-box col-3">@training.Duration min</div>
+                <p class="date training-time col-12">
+                Training time:<br>
+                    @if (training.TimeStamp.Hour < 10)
+                    {@zeroForTime
+                    }
+                    @training.TimeStamp.Hour:
+                    @if (training.TimeStamp.Minute < 10)
+                    {@zeroForTime
+                    }
+                    @training.TimeStamp.Minute
+                </p>
+            </div>
+        }
+    <h7 class="col-12 text-muted card-end ">No more trainings</h7>
+</div>
+
+@code {
+
+    private string today;
+    private bool dayView = true;
+    private string zeroForTime = "0";
+    private List<TrainingSVWithTime> trainings = new List<TrainingSVWithTime>();
+    private RenderFragment renderFragment;
+    private UserShortVersion currentLogged;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
+
+        string month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(DateTime.Now.Month);
+        today = $"{DateTime.Now.Day} {month} {DateTime.Now.Year}";
+
+        await LoadTrainings();
+    }
+
+    private async Task LoadTrainings()
+    {
+        var loaded = await TrainingManager.GetTrainingForToday(currentLogged.UserId);
+        if (loaded != null)
+            trainings = loaded;
+        else
+            trainings = new List<TrainingSVWithTime>();
+        Console.WriteLine("XXXXXXXXXx" + loaded);
+        StateHasChanged();
+    }
+
+}

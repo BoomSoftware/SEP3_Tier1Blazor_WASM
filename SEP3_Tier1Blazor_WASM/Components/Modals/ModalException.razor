@@ -9,8 +9,17 @@
                 <h5 class="modal-title">Modal title</h5>
             </div>
             <div class="modal-body">
-                Connection to the server has been lost unexpectedly. You will be automatically logged out. Please try again in a few minutes.
-                <button @onclick=ConfirmException>Confirm</button>
+                @if (ReloadException)
+                {
+                    <label>One or more trainings can not be displayd in the scheduler. Please change scheduler settings and reload page</label>
+                    <button @onclick=Close>Close</button>
+                }
+                else
+                {
+                    <label>Connection to the server has been lost unexpectedly. You will be automatically logged out. Please try again in a few minutes.</label>
+                    <button @onclick=ConfirmException>Confirm</button>
+                }
+                
             </div>
         </div>
     </div>
@@ -24,10 +33,12 @@
 
 
 @code {
-
+    [Parameter] public bool ReloadException { get; set; }
+    
     private string ModalDisplay = "none;";
     private string ModalClass = "";
     private bool ShowBackdrop = false;
+    
 
 
     protected override async Task OnInitializedAsync()

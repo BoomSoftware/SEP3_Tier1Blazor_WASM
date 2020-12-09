@@ -1,27 +1,31 @@
 ﻿@page "/admindashboard"
+@using SEP3_Tier1Blazor_WASM.Authentication
 @attribute [Authorize("Administrator")]
 @inject IAdminManager AdminManager
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider Authentication
 
 <div class="container-fluid">
-    <div class="main">
-        <div class="row h-100 justify-content-md-center content-row">
-            <div class="col-lg-5 col-md-12 my-auto">
-                <h1 style="font-size: 38px">Select elements to manage:</h1>
-                <button class="action-button purple @userPressedButton" @onclick=OpenUsersView><img src="/img/user.svg"></button>
-                <button class="action-button purple @companyPressedButton" @onclick=OpenPostsView><img src="/img/company.svg"></button>
-            </div>
-            <div class="col-lg-5 col-md-12 text-center">
-                <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
-                    @tableRender
-                </Animate>
-            </div>
+    <button class="btn btn-light btn-sm" @onclick=Logout>Logout</button>
+    <div class="row h-100 justify-content-md-center content-row">
+        <div class="col-lg-5 col-md-12 ">
+            <h1 style="font-size: 38px; color: white;margin-top: 30px">Select elements to manage:</h1>
+            <button class="action-button purple @userPressedButton" @onclick=OpenUsersView><img src="/img/user.svg"></button>
+            <button class="action-button purple @companyPressedButton" @onclick=OpenPostsView><img src="/img/company.svg"></button>
+        </div>
+        <div class="col-lg-5 col-md-12 text-center">
+            <Animate Animation="Animations.ZoomIn" Duration="TimeSpan.FromSeconds(1)">
+                @tableRender
+            </Animate>
         </div>
     </div>
 </div>
 
 
 @code {
+    
+    [CascadingParameter]
+    public ModalException ModalException { get; set; }
 
     private RenderFragment tableRender;
     private string userPressedButton;
@@ -30,10 +34,18 @@
     
     int totalNumberOfUsers;
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-       totalNumberOfUsers = await AdminManager.GetTotalNumberOfUsers();
-        posts = new List<int>();
+        try
+        {
+            totalNumberOfUsers = await AdminManager.GetTotalNumberOfUsers();
+            posts = new List<int>();
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+       
     }
 
     private void OpenUsersView()
@@ -45,12 +57,48 @@
 
     private async Task OpenPostsView()
     {
-        posts = await AdminManager.GetPosts(5, posts.Count);
-        tableRender = @<div>
-                          @foreach (var post in posts)
-                          {
-                              <Post PostID="post"/>
-                          }
-                      </div>;
+        try
+        {
+            posts = await AdminManager.GetPosts(5, posts.Count);
+            tableRender = @<div class="admin-post-view">
+                              @foreach (var post in posts)
+                              {
+                                  <Post PostID="post"/>
+                              }
+                              <div class="btn btn-sm btn-light" @onclick=LoadMorePosts>Load More</div>
+                          </div>;
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+      
+    }
+
+    private async Task LoadMorePosts()
+    {
+        try
+        {
+            var temp = await AdminManager.GetPosts(5, posts.Count);
+            if (temp != null)
+            {
+                foreach (var p in temp)
+                {
+                    posts.Add(p);
+                }
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+      
+    }
+
+    private void Logout()
+    {
+       ((CustomAuthenticationStateProvider)Authentication).Logout();
+        NavigationManager.NavigateTo("/", true);
     }
 }

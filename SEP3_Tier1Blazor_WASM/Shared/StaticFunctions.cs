@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.AspNetCore.Components.Authorization;
 using SEP3_Tier1Blazor_WASM.Models;
+using SEP3_Tier1Blazor_WASM.Models.UserModels;
 
 namespace SEP3_Tier1Blazor_WASM.Shared
 {
@@ -52,6 +53,11 @@ namespace SEP3_Tier1Blazor_WASM.Shared
         public static string GetUserAvatar(UserShortVersion user)
         {
             return String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
+        }
+
+        public static string GetImgFromByteArray(byte[] img)
+        {
+            return String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(img));
         }
     }
 }

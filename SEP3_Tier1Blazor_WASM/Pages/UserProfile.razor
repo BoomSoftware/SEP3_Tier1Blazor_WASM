@@ -65,11 +65,50 @@
                             <p class="desc-stat">Posts</p>
                         </div>
                         <div class="stat col-xs-4" style="padding-left: 50px;">
-                            <p class="number-stat">####</p>
+                            <p class="number-stat">@user.Score</p>
                             <p class="desc-stat">Points</p>
                         </div>
                     </div>
                     <p class="desc">@user.Description</p>
+
+                    @if (user.Address != null)
+                    {
+                        var i = 0;
+                        <div>
+                            @for (i = 0; i < user.Rating; i++)
+                            {
+                                int temp = i;
+                                <span class="fa fa-star checked" style="color: orange" @onclick="e => RatePage(temp)"></span>
+                            }
+
+                            @for (var j = i; j < 5; j++)
+                            {
+                                int temp = j;
+                                <span class="fa fa-star" @onclick="e => RatePage(temp)"></span>
+                            }
+                            
+                        </div>
+                        
+                    }
+                    
+                    <div>
+                           @if (user.UserStatus[3] || user.Id == currentLogged.UserId)
+                                            {
+                                                <button class="btn-sm btn scheduler-button" @onclick="OpenUserScheduler">Scheduler</button>
+                                            }
+                        
+                                            @if (user.UserStatus[4] || user.Id == currentLogged.UserId)
+                                            {
+                                                <button class="btn-sm btn scheduler-button"@onclick="OpenUserDiets">Diets</button>
+                                            }
+                        
+                                            @if (user.UserStatus[0] || user.UserStatus[5])
+                                            {
+                                                <button class="btn-sm btn scheduler-button" @onclick="OpenChat">Chat</button>
+                                            }
+                    </div>
+
+
                 </div>
                 <div class="right col-lg-8">
                     <div class="row profile-options-box">
@@ -81,11 +120,11 @@
                                     <NotAuthorized>
                                         @if (!user.UserStatus[5])
                                         {
-                                            <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FOLLOW_PAGE, true))>Follow</button>
+                                            <button class="btn-sm btn scheduler-button" @onclick=@(e => InteractWithUser(UserActionTypes.USER_FOLLOW_PAGE, true))>Follow</button>
                                         }
                                         else
                                         {
-                                            <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FOLLOW_PAGE, false))>Unfollow</button>
+                                            <button class="btn-sm btn scheduler-button" @onclick=@(e => InteractWithUser(UserActionTypes.USER_FOLLOW_PAGE, false))>Unfollow</button>
                                         }
 
                                     </NotAuthorized>
@@ -96,22 +135,22 @@
                             {
                                 if (user.UserStatus[0])
                                 {
-                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REMOVE, true))>Cancel friendship</button>
+                                    <button class="btn-sm btn scheduler-button"@onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REMOVE, true))>Cancel friendship</button>
                                 }
                                 else if (user.UserStatus[6])
                                 {
-                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_RESPONSE, true))>Confirm friendship</button>
-                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_RESPONSE, false))>Discard friendship</button>
+                                    <button class="btn-sm btn scheduler-button"@onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_RESPONSE, true))>Confirm friendship</button>
+                                    <button class="btn-sm btn scheduler-button"@onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_RESPONSE, false))>Discard friendship</button>
                                 }
                                 else if (user.UserStatus[1])
                                 {
-                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_SEND, false))>Cancel friend request</button>
+                                    <button class="btn-sm btn scheduler-button"@onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_SEND, false))>Cancel friend request</button>
                                 }
                                 else
                                 {
                                     <AuthorizeView Resource="@id" Policy="CurrentLogged">
                                         <NotAuthorized>
-                                            <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_SEND, true))>Add Friend</button>
+                                            <button class="btn-sm btn scheduler-button"@onclick=@(e => InteractWithUser(UserActionTypes.USER_FRIEND_REQUEST_SEND, true))>Add Friend</button>
                                         </NotAuthorized>
                                     </AuthorizeView>
                                 }
@@ -124,16 +163,16 @@
                     {
                         <AuthorizeView Resource="@id" Policy="CurrentLogged">
                             <Authorized>
-                                <button @onclick=OnDeleteAccount>Delete Account</button>
+                                <button class="btn-sm btn scheduler-button"@onclick=OnDeleteAccount>Delete Account</button>
                             </Authorized>
                             <NotAuthorized>
                                 @if (user.UserStatus[2])
                                 {
-                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_REPORT, user.UserStatus[2]))>Cancel user report</button>
+                                    <button class="btn-sm btn scheduler-button"@onclick=@(e => InteractWithUser(UserActionTypes.USER_REPORT, user.UserStatus[2]))>Cancel user report</button>
                                 }
                                 else
                                 {
-                                    <button @onclick=@(e => InteractWithUser(UserActionTypes.USER_REPORT, user.UserStatus[2]))>Report user</button>
+                                    <button class="btn-sm btn scheduler-button"@onclick=@(e => InteractWithUser(UserActionTypes.USER_REPORT, user.UserStatus[2]))>Report user</button>
                                 }
                             </NotAuthorized>
                         </AuthorizeView>
@@ -147,15 +186,13 @@
                         </AuthorizeView>
                     }
 
-
-
                     @if (user.UserStatus[0] || user.Id == currentLogged.UserId || user.UserStatus[5])
                     {
                         if (!reloadPostList)
                         {
                             foreach (var post in posts)
                             {
-                                <Post PostID="post" OnPostDelete="@LoadPosts"/>
+                                <Post PostID="post" OnPostDelete=@LoadPosts/>
                             }
                         }
                     }
@@ -183,7 +220,6 @@
     private ModalUserList userListModal;
     private UserShortVersion currentLogged;
 
-
     protected override async Task OnInitializedAsync()
     {
         await JS.InvokeVoidAsync("initializeComponent", DotNetObjectReference.Create(this));
@@ -197,7 +233,15 @@
 
         try
         {
+        if(currentLogged.AccountType.Equals("Administrator"))
+        {
+            user = await UserManger.GetUser(id, id);
+        }
+        else
+        {
             user = await UserManger.GetUser(currentLogged.UserId, id);
+        }
+        
             await LoadPosts();
 
             avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(user.Avatar));
@@ -213,8 +257,8 @@
     {
         try
         {
-            await UserManger.RemoveUser(id);
             ((CustomAuthenticationStateProvider) Authentication).Logout();
+            await UserManger.RemoveUser(id);
             NavigationManager.NavigateTo("/");
         }
         catch
@@ -242,19 +286,19 @@
 
     private async Task OpenFriendList()
     {
-        try
-        {
-            userListModal.Users = await UserManger.GetUserFriends(user.Id, currentLogged.UserId, 0);
-            userListModal.Title = $"{user.Name}'s friends";
-            userListModal.ListType = "FriendList";
-            userListModal.CurrentLoggedId = currentLogged.UserId;
-            userListModal.UserId = user.Id;
-            userListModal.Open();
-        }
-        catch
-        {
-            ModalException.Open();
-        }
+    try
+    {
+        userListModal.Title = $"{user.Name}'s friends";
+        userListModal.ListType = "FriendList";
+        userListModal.CurrentLoggedId = currentLogged.UserId;
+        userListModal.UserId = user.Id;
+        await userListModal.LoadUsersWithoutStatus();
+        userListModal.Open();
+    }
+    catch
+    {
+        ModalException.Open();
+    }
     }
 
     private async Task InteractWithUser(UserActionTypes action, bool value)
@@ -273,12 +317,11 @@
                     user.FriendsNumber--;
                     break;
                 case UserActionTypes.USER_FOLLOW_PAGE:
-                    await UserManger.InteractWithUser(currentLogged.UserId, user.Id, UserActionTypes.USER_FOLLOW_PAGE, value);
+                    await JS.InvokeVoidAsync("sendFriendRequest", JsonSerializer.Serialize(new UserAction {SenderId = currentLogged.UserId, ReceiverId = user.Id, ActionType = UserActionTypes.USER_FOLLOW_PAGE.ToString(), Value = value, SenderName = currentLogged.UserFullName}));
                     user.UserStatus[5] = value;
                     break;
                 case UserActionTypes.USER_FRIEND_REQUEST_SEND:
                     await JS.InvokeVoidAsync("sendFriendRequest", JsonSerializer.Serialize(new UserAction {SenderId = currentLogged.UserId, ReceiverId = user.Id, ActionType = UserActionTypes.USER_FRIEND_REQUEST_SEND.ToString(), Value = value, SenderName = currentLogged.UserFullName}));
-    //await UserManger.InteractWithUser(currentLogged.UserId, user.Id, UserActionTypes.USER_FRIEND_REQUEST_SEND, value);
                     user.UserStatus[1] = value;
                     break;
                 case UserActionTypes.USER_FRIEND_REQUEST_RESPONSE:
@@ -289,7 +332,7 @@
                         user.FriendsNumber++;
                     }
 
-                    else if (!value)
+                    else
                     {
                         user.UserStatus[6] = false;
                     }
@@ -325,34 +368,65 @@
     [JSInvokable("LoadMorePosts")]
     public async Task LoadPosts()
     {
-        List<int> temp = await PostManager.GetPostByUser(user.Id, posts.Count);
-        if (temp != null)
+        try
         {
-            foreach (var post in temp)
+            List<int> temp = await PostManager.GetPostByUser(user.Id, posts.Count);
+            if (temp != null)
             {
-                posts.Add(post);
+                foreach (var post in temp)
+                {
+                    posts.Add(post);
+                }
+                if (posts.Count > 0 && temp.Count != 0)
+                {
+                    await JS.InvokeAsync<string>("setLastPostId", posts.ToList().Last());
+                }
+                else
+                {
+                    await JS.InvokeAsync<string>("setLastPostId", null);
+                }
             }
-            if (posts.Count > 0 && temp.Count != 0)
-            {
-                await JS.InvokeAsync<string>("setLastPostId", posts.ToList().Last());
-            }
-            else
-            {
-                await JS.InvokeAsync<string>("setLastPostId", null);
-            }
+            StateHasChanged();
         }
-        StateHasChanged();
+        catch
+        {
+            ModalException.Open();
+        }
+     
     }
 
-
-    private void NewPostCreated()
+    private void NewPostCreated(int newId)
     {
         reloadPostList = true;
         StateHasChanged();
 
-        posts.Insert(0, id);
+        posts.Insert(0, newId);
         reloadPostList = false;
         StateHasChanged();
+    }
+
+    private void OpenUserScheduler()
+    {
+        NavigationManager.NavigateTo($"profile/{UserArgument}/scheduler");
+    }
+
+    private void OpenUserDiets()
+    {
+        NavigationManager.NavigateTo($"profile/{UserArgument}/diet");
+    }
+
+    private void OpenChat()
+    {
+        NavigationManager.NavigateTo($"chat/{UserArgument}/");
+    }
+    
+    private void RatePage(int value)
+    {
+        if (!user.UserStatus[7])
+        {
+        
+            UserManger.InteractWithUser(currentLogged.UserId, user.Id, UserActionTypes.USER_RATE_PAGE, value+1);
+        }
     }
 
 

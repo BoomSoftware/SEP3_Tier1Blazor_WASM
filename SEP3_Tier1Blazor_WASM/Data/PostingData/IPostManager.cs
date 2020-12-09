@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using SEP3_Tier1Blazor_WASM.Models;
+using SEP3_Tier1Blazor_WASM.Models.Post;
+using SEP3_Tier1Blazor_WASM.Models.UserModels;
 using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Data.PostingData

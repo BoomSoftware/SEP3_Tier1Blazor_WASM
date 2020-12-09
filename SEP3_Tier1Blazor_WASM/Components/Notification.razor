@@ -1,4 +1,5 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using SEP3_Tier1Blazor_WASM.Models.Notification
+@inject NavigationManager NavigationManager
 @inject IUserManger UserManger
 <a class="dropdown-item notification-item" @onclick=React>
     <h3 class="notification-sender">@Model.SenderName</h3>
@@ -10,8 +11,13 @@
     
     [Parameter]
     public NotificationModel Model { get; set; }
-
-
+    
+    [Parameter]
+    public string CurrentLoggedName { get; set; }
+    
+    [Parameter]
+    public int CurrentLoggedId { get; set; }
+    
     private async Task React()
     {
         try
@@ -20,6 +26,16 @@
             if (Model.ActionType.Equals(UserActionTypes.USER_FRIEND_REQUEST_SEND.ToString()))
             {
                 NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(Model.SenderName)}.{Model.SenderId}/", true);
+            }
+
+            if (Model.ActionType.Equals(UserActionTypes.MESSAGE_CREATE.ToString()))
+            {
+                NavigationManager.NavigateTo($"chat/{StaticFunctions.GetUserUri(Model.SenderName)}.{Model.SenderId}/", true);
+            }
+
+            if (Model.ActionType.Equals(UserActionTypes.USER_FOLLOW_PAGE.ToString()))
+            {
+                NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(CurrentLoggedName)}.{CurrentLoggedId}/", true);
             }
         }
         catch

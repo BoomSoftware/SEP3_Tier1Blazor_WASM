@@ -1,9 +1,9 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using SEP3_Tier1Blazor_WASM.Models;
+using SEP3_Tier1Blazor_WASM.Models.UserModels;
 
 namespace SEP3_Tier1Blazor_WASM.Data.AdminData
 {
@@ -15,16 +15,19 @@ namespace SEP3_Tier1Blazor_WASM.Data.AdminData
         public AdminManagerRest()
         {
             httpClient = Client;
-            uri = "http://localhost:8080/admin";
+            uri = "https://localhost:8443/admin";
         }
         
         public async Task<IList<UserShortVersion>> GetUsers(int number, int offset)
         {
             string result = await httpClient.GetStringAsync($"{uri}/users?limit={number}&offset={offset}");
 
-            IList<UserShortVersion> users = JsonSerializer.Deserialize<IList<UserShortVersion>>(result);
+            if (!String.IsNullOrEmpty(result))
+            {
+                return JsonSerializer.Deserialize<IList<UserShortVersion>>(result);
+            }
 
-            return users;
+            return null;
         }
 
         public async Task<List<int>> GetPosts(int number, int offset)
@@ -42,10 +45,6 @@ namespace SEP3_Tier1Blazor_WASM.Data.AdminData
             return int.Parse(result);
 
         }
-
-        public Task<int> GetTotalNumberOfPosts()
-        {
-            throw new System.NotImplementedException();
-        }
+        
     }
 }

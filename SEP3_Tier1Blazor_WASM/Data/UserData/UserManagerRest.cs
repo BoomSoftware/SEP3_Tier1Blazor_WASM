@@ -5,7 +5,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using SEP3_Tier1Blazor_WASM.Models;
+using SEP3_Tier1Blazor_WASM.Models.Notification;
+using SEP3_Tier1Blazor_WASM.Models.UserModels;
 using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Data.UserData
@@ -19,20 +20,13 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
         public UserManagerRest()
         {
             client = Client;
-            uri = "http://localhost:8080/users";
+            uri = "https://localhost:8443/users";
         }
 
 
         public async Task<bool> AddNewUser(User user)
         {
-            string userSerialized = JsonSerializer.Serialize(user);
-            StringContent content = new StringContent(
-                userSerialized,
-                Encoding.UTF8,
-                "Application/json"
-            );
-            HttpResponseMessage response = await client.PostAsync(uri, content);
-            Console.WriteLine("**************** Status code add user: " + response.StatusCode);
+            HttpResponseMessage response = await client.PostAsync(uri, PrepareObjectForRequest(user));
             if (response.IsSuccessStatusCode)
                 return true;
             return false;
@@ -48,14 +42,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
             if (editedUser.Avatar == currentLogged.Avatar)
                 editedUser.Avatar = null;
 
-            string userSerialized = JsonSerializer.Serialize(editedUser);
-            StringContent content = new StringContent(
-                userSerialized,
-                Encoding.UTF8,
-                "Application/json");
-
-            HttpResponseMessage response = await client.PutAsync($"{uri}/{editedUser.Id}", content);
-            Console.WriteLine("###################### EDIT USER SENT response:" + response.StatusCode);
+            HttpResponseMessage response = await client.PutAsync($"{uri}/{editedUser.Id}", PrepareObjectForRequest(currentLogged));
             if (response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.BadRequest)
                 return true;
             return false;
@@ -90,12 +77,12 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
             return null;
         }
         
-        public async Task<List<UserShortVersion>> GetUserFriends(int userId, int senderId, int offset)
+        public async Task<List<UserShortVersionWithStatus>> GetUserFriends(int userId, int senderId, int offset)
         {
-            return JsonSerializer.Deserialize<List<UserShortVersion>>(await client.GetStringAsync($"{uri}/{userId}/friends?senderId={senderId}&offset={offset}"));
+            return JsonSerializer.Deserialize<List<UserShortVersionWithStatus>>(await client.GetStringAsync($"{uri}/{userId}/friends?senderId={senderId}&offset={offset}"));
         }
 
-        public async Task InteractWithUser(int senderId, int receiverId, UserActionTypes actionType, bool value)
+        public async Task InteractWithUser(int senderId, int receiverId, UserActionTypes actionType, object value)
         {
             UserAction userAction = new UserAction
             {
@@ -105,13 +92,8 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
                 Value = value
             };
 
-            string actionSerialized = JsonSerializer.Serialize(userAction);
-            StringContent content = new StringContent(
-                actionSerialized,
-                Encoding.UTF8,
-                "Application/json");
-
-            await client.PostAsync($"{uri}/actions", content);
+            
+            await client.PostAsync($"{uri}/actions", PrepareObjectForRequest(userAction));
         }
 
         public async Task MarkNotificationAsRead(int notificationId)
@@ -136,22 +118,22 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
             return null;
         }
 
-        public async Task ReportUser(int senderId, int receiverId)
+        public async Task<List<UserShortVersion>> GetOnlineUsers(int userId)
         {
-            UserAction userAction = new UserAction()
-            {
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                ActionType = UserActionTypes.USER_REPORT.ToString()
-            };
-            
-            string idSerialized = JsonSerializer.Serialize(userAction);
-            StringContent stringContent = new StringContent(
-                idSerialized,
-                Encoding.UTF8,
-                "Application/json");
-            
-            await client.PostAsync($"{uri}/actions", stringContent);
+            string temp = await client.GetStringAsync($"{uri}/{userId}/online_friends");
+            if (!string.IsNullOrEmpty(temp))
+                return JsonSerializer.Deserialize<List<UserShortVersion>>(temp);
+            return null;
+        }
+
+        public async Task<UserShortVersion> GetUserShortVersion(int userId)
+        {
+            return JsonSerializer.Deserialize<UserShortVersion>(await client.GetStringAsync($"{uri}/{userId}/short"));
+        }
+
+        public async Task IncrementScore(int userId, int scoreToAdd)
+        {
+            await client.PutAsync($"{uri}/{userId}/score?scoreToAdd={scoreToAdd}", null);
         }
     }
 }

@@ -1,0 +1,283 @@
+﻿@using System.Globalization
+@using System.Threading
+@using System.ComponentModel
+@using SEP3_Tier1Blazor_WASM.Components.Modals
+@using SEP3_Tier1Blazor_WASM.Data.TrainingData
+@using SEP3_Tier1Blazor_WASM.Models.Training
+@inject IJSRuntime JS;
+@inject ITrainingManager TrainingManager
+@inject AuthenticationStateProvider Authentication;
+
+
+@trainingsRender
+<Modal @ref="@modal" DeleteTrainingEvent="@OnDeleteTraining"/>
+<ModalUserList @ref="@modalUserList"/>
+<ModalException @ref="@modalException"></ModalException>
+@if (UserId == currentLoggedId)
+{
+    <ModalTrainingCreator @ref="@modalCreator" CreateTrainingEvent="OnCreatedTraining"/>
+}
+
+<div class="container-fluid">
+    
+    <button class="scheduler-button" @onclick="DecreaseWeekNumber">Previous</button>
+    <label class="customizer-label">Week @weekNumber</label>
+    <button class="scheduler-button" @onclick="IncreaseWeekNumber">Next</button>
+    
+    
+    @if (currentLoggedId == UserId)
+    {
+         <button class="scheduler-button" @onclick="ShareScheduler">Share</button>
+    }
+
+
+    <table class="table table-bordered scheduler">
+        <thead>
+        <tr>
+            <th scope="col" class="@dayCss"></th>
+            @for (int i = 0; i < DaysInWeek; i++)
+            {
+                <th scope="col">@dayNames[i]</th>
+            }
+        </tr>
+        </thead>
+        <tbody>
+
+        @if (!isRefresh)
+        {
+              for (int i = 0; i < (EndHour - StartHour); i++)
+                    {
+                        <tr>
+                            <th scope="row" class="scheduler-time">@(StartHour + i):00</th>
+                            @for (int j = 0; j < DaysInWeek; j++)
+                            {
+                                string dayInWeek = dayNames[j];
+                                int hour = StartHour + i;
+                                <td id="@(dayNames[j] + '-' + (StartHour + i))" class="scheduler-td" @onclick=@(() => OpenTrainingCreator(dayInWeek, hour))></td>
+                            }
+                        </tr>
+                    }
+        }
+      
+        </tbody>
+    </table>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public int DaysInWeek { get; set; }
+
+    [Parameter]
+    public int StartHour { get; set; }
+
+    [Parameter]
+    public int EndHour { get; set; }
+    [Parameter]
+    public int UserId { get; set; }
+
+    private Modal modal;
+    private ModalUserList modalUserList;
+    private ModalException modalException;
+    private ModalTrainingCreator modalCreator;
+    private DotNetObjectReference<Scheduler> objectReference;
+    private int currentLoggedId;
+
+
+    private string[] dayNames = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+    private int weekNumber;
+    private CultureInfo myCI = new CultureInfo("en-US");
+    private Calendar myCal;
+    private RenderFragment trainingsRender;
+    private List<TrainingSVWithTime> trainingModels;
+    private string dayCss;
+    private string id;
+    private bool isRefresh;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentLoggedId = StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync());
+        myCal = myCI.Calendar;
+        weekNumber = myCal.GetWeekOfYear(DateTime.Today, CalendarWeekRule.FirstDay, DateTime.Now.DayOfWeek);
+
+        if (DaysInWeek == 5)
+            dayCss = "five-days";
+        if (DaysInWeek == 7)
+            dayCss = "seven-days";
+
+        trainingModels = new List<TrainingSVWithTime>();
+        await LoadTrainingsForWeek();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+             await SetTrainingsPosition();
+        }
+    }
+    
+    private async Task SetTrainingsPosition()
+    {
+        try
+        {
+            trainingsRender = null;
+            foreach (var training in trainingModels)
+            {
+                string elementId = $"{training.TimeStamp.DayOfWeek}-{training.TimeStamp.Hour}";
+                var top = await JS.InvokeAsync<double>("getElementTop", elementId);
+                var left = await JS.InvokeAsync<double>("getElementLeft", elementId);
+                var width = await JS.InvokeAsync<double>("getElementWidth", elementId);
+
+                int height = training.Duration;
+
+                if (training.TimeStamp.Minute > 0)
+                {
+                    top += training.TimeStamp.Minute;
+                }
+
+                string trainingCss = $"top: {top}px; left:{left}px; min-height:{height}px; max-height:{height}px; width:{width}px; ";
+
+                Console.WriteLine("title" + training.Title);
+                trainingsRender += @<div @onclick="e => OpenTrainingView(training.Id)">
+                                       <div class="scheduler-training" style="@trainingCss">
+                                           <p class="scheduler-training-time">@training.TimeStamp.ToString("HH:mm") - @training.TimeStamp.AddMinutes(training.Duration).ToString("HH:mm")</p>
+                                           <div class="col-12">
+                                               <h3 class="scheduler-training-title">@training.Title</h3>
+                                           </div>
+                                       </div>
+                                   </div>;
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            modalException.ReloadException = true;
+                modalException.Open();
+        }
+    }
+
+    private void OpenTrainingCreator(string day, int hour)
+    {
+        if (currentLoggedId == UserId)
+        {
+              Console.WriteLine(day + hour);
+                    DateTime dateTime = FirstDateOfWeek(day);
+                    TimeSpan timeSpan = new TimeSpan(hour, 0, 0);
+                    dateTime = dateTime.Date + timeSpan;
+            
+                    modalCreator.DateTime = dateTime;
+                    modalCreator.Open();
+        }
+    }
+
+    private DateTime FirstDateOfWeek(string day)
+    {
+        DateTime jan1 = new DateTime(DateTime.Today.Year, 1, 1);
+        int daysOffset = DayOfWeek.Thursday - jan1.DayOfWeek;
+
+        DateTime firstThursday = jan1.AddDays(daysOffset);
+        var cal = CultureInfo.CurrentCulture.Calendar;
+        int firstWeek = cal.GetWeekOfYear(firstThursday, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+        var weekNum = weekNumber;
+        if (firstWeek == 1)
+            weekNum -= 1;
+
+
+        var result = firstThursday.AddDays(weekNum * 7);
+        int dayNumber = -1;
+        switch (day)
+        {
+            case "Monday":
+                dayNumber = 0;
+                break;
+            case "Tuesday":
+                dayNumber = 1;
+                break;
+            case "Wednesday":
+                dayNumber = 2;
+                break;
+            case "Thursday":
+                dayNumber = 3;
+                break;
+            case "Friday":
+                dayNumber = 4;
+                break;
+            case "Saturday":
+                dayNumber = 6;
+                break;
+            case "Sunday":
+                dayNumber = 7;
+                break;
+        }
+        return result.AddDays(-3 + dayNumber);
+    }
+
+    private async Task LoadTrainingsForWeek()
+    {
+        trainingModels = new List<TrainingSVWithTime>();
+        List<TrainingSVWithTime> temp = await TrainingManager.GetTrainingsInWeekForUser(UserId, weekNumber);
+        if (temp != null && temp.Any())
+            trainingModels = temp;
+        
+        Console.WriteLine("trainings: "+trainingModels.Count);
+        isRefresh = false;
+        await SetTrainingsPosition();
+        StateHasChanged();
+    }
+
+    private async Task OpenTrainingView(int trainingId)
+    {
+        Console.WriteLine("Training id: " + trainingId);
+        modal.TrainingId = trainingId;
+        modal.IsOwner = currentLoggedId == UserId;
+        await modal.LoadTraining();
+        modal.Open();
+    }
+    
+    private async Task OnDeleteTraining(int deletedId)
+    {
+        trainingModels.RemoveAll(e => e.Id == deletedId);
+        await SetTrainingsPosition();
+    }
+
+    private async Task OnCreatedTraining(TrainingSVWithTime training)
+    {
+        trainingModels.Add(training);
+        await SetTrainingsPosition();
+    }
+
+    private async Task IncreaseWeekNumber()
+    {
+        weekNumber++;
+        if (weekNumber > 52)
+            weekNumber = 1;
+        await LoadTrainingsForWeek();
+    }
+
+    private async Task DecreaseWeekNumber()
+    {
+        weekNumber--;
+        if (weekNumber < 1)
+        {
+            weekNumber = 52;
+        }
+        await LoadTrainingsForWeek();
+    }
+
+    private async Task ShareScheduler()
+    {
+        modalUserList.CurrentLoggedId = currentLoggedId;
+        modalUserList.UserId = currentLoggedId;
+        modalUserList.Title = "Share with friends";
+        modalUserList.ListType = "FriendList";
+        modalUserList.Action = UserActionTypes.USER_SHARE_TRAININGS;
+        modalUserList.StatusNumber = 0;
+        await modalUserList.LoadUsersWithStatus();
+        modalUserList.IsShare = true;
+        modalUserList.Open();
+
+    }
+}

@@ -1,0 +1,103 @@
+﻿@page "/profile/{UserArgument}/Scheduler"
+@using SEP3_Tier1Blazor_WASM.Data.Storage
+@using SEP3_Tier1Blazor_WASM.Models.Training
+
+@inject ILocalStorage LocalStorage
+
+
+
+<div class="row content-row ">
+    <AuthorizeView Resource="userId" Policy="CurrentLogged">
+    <button class="customizer-button" @onclick="e => isCustomizeMode = !isCustomizeMode">Customize your scheduler</button>
+    </AuthorizeView>
+            <div class="scheduler-customizer col-12 ml-1">
+            @if (isCustomizeMode)
+                        {
+                            <EditForm Model="settings" OnValidSubmit="OnCustomizeScheduler" >
+                                <DataAnnotationsValidator/>
+                                <ValidationSummary/>
+                                <label class="customizer-label">Start Hour: </label>
+                                <InputNumber class="customizer-input" @bind-Value="@settings.StartHour"/>
+                                <label class="customizer-label">End Hour: </label>
+                                <InputNumber class="customizer-input" @bind-Value="@settings.EndHour"/>
+                                <label class="customizer-label">Days: </label>
+                                <select class="customizer-input" @bind="@settings.DaysInWeek">
+                                    <option value="5">Only week days</option>
+                                    <option value="7">Week days and weekend</option>
+                                </select>
+                
+                
+                                <button type="submit" class="customizer-button">Save Settings</button>
+                            </EditForm>
+                        }
+    
+        </div>
+    
+    
+    </div>
+
+
+
+<div class="row content-row">
+    <Scheduler EndHour="@settings.EndHour" StartHour="@settings.StartHour" DaysInWeek="@settings.DaysInWeek" UserId="@userId"/>
+</div>
+
+
+@code
+{
+    [CascadingParameter]
+    public ModalException ModalException { get; set; }
+    
+    [Parameter]
+    public string UserArgument { get; set; }
+    
+    private SchedulerSettings settings;
+    private bool isCustomizeMode;
+    private int userId;
+    private int trainingDays = 5;
+    private int startHour = 8;
+    private int endHour = 22;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            string[] tempUser = UserArgument.Split('.');
+            if (tempUser.Length == 3)
+                userId = Int32.Parse(tempUser[2]);
+            if (tempUser.Length == 2)
+                userId = Int32.Parse(tempUser[1]);
+
+
+            settings = new SchedulerSettings {EndHour = 20, DaysInWeek = 5, StartHour = 8};
+            try
+            {
+                settings = await LocalStorage.GetSchedulerSetting();
+            }
+            catch
+            {
+                await LocalStorage.SetSchedulerSetting(settings);
+            }
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+        
+    }
+
+    private async Task OnCustomizeScheduler()
+    {
+        try
+        {
+            await LocalStorage.SetSchedulerSetting(settings);
+            isCustomizeMode = false;
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+    }
+
+}

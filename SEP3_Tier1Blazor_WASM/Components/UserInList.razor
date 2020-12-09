@@ -1,20 +1,61 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using SEP3_Tier1Blazor_WASM.Models.UserModels
+@inject NavigationManager NavigationManager
+@inject IUserManger UserManager
 
-    <div class="row list-user d-flex align-items-center" @onclick=@(e => OpenUserProfile(User.UserId, User.UserFullName))>
-        <img src=@StaticFunctions.GetUserAvatar(User) class="list-user-avatar">
-        <p class="list-user-name link">@User.UserFullName</p>
-    </div>
+<div class="row list-user d-flex align-items-center">
+    <img src=@StaticFunctions.GetUserAvatar(User) class="list-user-avatar">
+    <p @onclick=@(e => OpenUserProfile(User.UserId, User.UserFullName)) class="list-user-name link">@User.UserFullName</p>
+    @if (IsShare)
+            {
+                if (AlreadyShared)
+                {
+                    <button @onclick="e => ShareTraining(false)">Unshare</button>
+                }
+                else{
+                    <button @onclick="e => ShareTraining(true)">Share</button>
+            }
+                
+            }
+</div>
 
 @code {
 
     [Parameter]
     public UserShortVersion User { get; set; }
     
+    [Parameter]
+    public bool IsShare { get; set; }
+
+    [Parameter]
+    public int CurrentLoggedId { get; set; }
     
+    [Parameter]
+    public bool AlreadyShared { get; set; }
+    
+    [Parameter]
+    public UserActionTypes Action { get; set; }
+    
+    [Parameter]
+    public string OnClickAction { get; set; }
+
+
     private void OpenUserProfile(int id, string name)
     {
         string uri = StaticFunctions.GetUserUri(name);
-        NavigationManager.NavigateTo($"profile/{uri}.{id}/", true);
+        if (OnClickAction.Equals("OpenChat"))
+        {
+            NavigationManager.NavigateTo($"chat/{uri}.{id}/", true);
+        }
+        else if(OnClickAction.Equals("OpenProfile"))
+        {
+            NavigationManager.NavigateTo($"profile/{uri}.{id}/", true);
+        }
+    }
+
+    private async Task ShareTraining(bool value)
+    {
+        await UserManager.InteractWithUser(CurrentLoggedId, User.UserId, Action, value);
+        AlreadyShared = !AlreadyShared;
     }
     
 }

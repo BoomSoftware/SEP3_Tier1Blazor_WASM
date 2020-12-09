@@ -1,0 +1,31 @@
+﻿@inject NavigationManager NavigationManager
+
+<div class="conversation-small-box d-flex align-self-center" @onclick="OnSelectConversation" style="@selectedCss">
+    <div class="col-3 d-flex align-self-center">
+            <img src=@StaticFunctions.GetUserAvatar(User) class="rounded-circle " width="45"/>
+        </div>
+        <div class="col-9 content">
+            <div class="author"> @User.UserFullName</div>
+            <p>@User.LastMessage.Content</p>
+        </div>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public UserSVWithMessage User { get; set; }
+    
+
+    private string selectedCss = "";
+
+
+    private async Task OnSelectConversation()
+    {
+        string url = StaticFunctions.GetUserUri(User.UserFullName);
+        NavigationManager.NavigateTo($"chat/{url}.{User.UserId}/", true);
+        StateHasChanged();
+    }
+
+
+}

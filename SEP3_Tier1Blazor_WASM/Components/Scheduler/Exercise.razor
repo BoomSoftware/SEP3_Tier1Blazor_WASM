@@ -1,0 +1,126 @@
+﻿@using SEP3_Tier1Blazor_WASM.Data.TrainingData
+@using SEP3_Tier1Blazor_WASM.Models.Training
+@inject ITrainingManager TrainingManager
+
+@if (!isDelete)
+{
+    <div class="calendar-card">
+        <div class="row date-box d-flex align-items-center date-box">
+            <div style="margin-bottom: 5px;">
+                @if (IsOwner)
+                {
+                    <button class="btn btn-sm btn-light" style="margin-right: 5px;" @onclick=DeleteExercise>Delete</button>
+                    <button class="btn btn-sm btn-light" @onclick=OnEnableEditMode>Edit</button>
+                }
+            </div>
+
+            <br>
+            @if (!isEditMode)
+            {
+                <h4 class="date-title col-12">@ExerciseModel.Title</h4>
+                <p class="date training-time col-12">
+                    @ExerciseModel.Description
+                    @if (videos.Any())
+                    {
+                        foreach (var video in videos)
+                        {
+                            <iframe class="img-fluid" src="@video"></iframe>
+                        }
+                    }
+                </p>
+            }
+            else
+            {
+                <EditForm Model="editedExercise" OnValidSubmit="ConfirmEdit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    
+                    <InputText type="text" @bind-Value="editedExercise.Title"/>
+                    <p class="date training-time col-12">
+                        <InputText type="text" @bind-Value="editedExercise.Description"/>
+                    </p>
+                    <button class="btn btn-sm btn-light" type="submit">Confirm</button>
+                </EditForm>
+                <button class="btn btn-sm btn-light" @onclick="CancelEdit">Cancel</button>
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+
+    [Parameter]
+    public ExerciseModel ExerciseModel { get; set; }
+
+    [Parameter]
+    public bool IsOwner { get; set; }
+    
+    [Parameter]
+    public int trainingId { get; set; }
+
+    private ExerciseModel editedExercise = new ExerciseModel();
+    private List<string> videos = new List<string>();
+    private bool isEditMode = false;
+    private bool isDelete = false;
+
+
+    protected override void OnInitialized()
+    {
+        SearchForVideo();
+    }
+
+    private void SearchForVideo()
+    {
+        string[] words = ExerciseModel.Description.Split(" ");
+        videos = new List<string>();
+        foreach (var word in words)
+        {
+            if (word.Contains("www.youtube.com"))
+            {
+                string newWord = word.Replace("watch?v=", "embed/");
+                videos.Add(newWord);
+            }
+        }
+    }
+
+    private void OnEnableEditMode()
+    {
+        editedExercise = ExerciseModel;
+        isEditMode = true;
+        StateHasChanged();
+    }
+
+    private void CancelEdit()
+    {
+        isEditMode = false;
+        editedExercise = new ExerciseModel();
+        StateHasChanged();
+    }
+
+    private async Task ConfirmEdit()
+    {
+        try
+        {
+            await TrainingManager.EditExerciseInTraining(trainingId, editedExercise);
+            ExerciseModel = editedExercise;
+            isEditMode = false;
+            StateHasChanged();
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task DeleteExercise()
+    {
+        try
+        {
+            await TrainingManager.DeleteExerciseFromTraining(trainingId, ExerciseModel.Id);
+            isDelete = true;
+            StateHasChanged();
+        }
+        catch{}
+    }
+
+}

@@ -1,4 +1,5 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using SEP3_Tier1Blazor_WASM.Models.UserModels
+@inject NavigationManager NavigationManager
 @inject IUserManger UserManger
 
 <div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
@@ -12,11 +13,22 @@
             </div>
             <div class="modal-body">
                 <ul class="list-group">
-                    @foreach (var user in Users)
+                    @if (IsShare)
                     {
-                        <UserInList User="@user"/>
+                        foreach (var user in usersWithStatus)
+                        {
+                            
+                            <UserInList User="@user" IsShare="true" CurrentLoggedId="@CurrentLoggedId" AlreadyShared="@user.Status[StatusNumber]" Action="@Action" OnClickAction="OpenProfile"/>
+                        }
                     }
-                    
+                    else
+                    {
+                        foreach (var user in Users)
+                        {
+                            <UserInList User="@user" OnClickAction="OpenProfile"/>
+                        }
+                    }
+
                     <button @onclick=LoadMoreUsers>Load More</button>
                 </ul>
             </div>
@@ -47,14 +59,25 @@
 
     [Parameter]
     public int UserId { get; set; }
+    
+    [Parameter]
+    public bool IsShare { get; set; }
+    
+    [Parameter]
+    public int StatusNumber { get; set; }
+    
+    [Parameter]
+    public UserActionTypes Action { get; set; }
 
     private string ModalDisplay = "none;";
     private string ModalClass = "";
     private bool ShowBackdrop = false;
+    private List<UserShortVersionWithStatus> usersWithStatus;
 
     protected override async Task OnInitializedAsync()
     {
         Users = new List<UserShortVersion>();
+        
     }
 
     public void Open()
@@ -75,7 +98,27 @@
 
     private async Task LoadMoreUsers()
     {
-        List<UserShortVersion> temp = new List<UserShortVersion>();
+        if (IsShare)
+        {
+            await LoadUsersWithStatus();
+        }
+        else
+        {
+            await LoadUsersWithoutStatus();
+        }
+        
+        StateHasChanged();
+    }
+
+    public async Task LoadUsersWithStatus()
+    {
+        if (ListType.Equals("FriendList"))
+            usersWithStatus = await UserManger.GetUserFriends(UserId,CurrentLoggedId, Users.Count);
+    }
+
+    public async Task LoadUsersWithoutStatus()
+    {
+        List<UserShortVersionWithStatus> temp = new List<UserShortVersionWithStatus>();
         if (ListType.Equals("FriendList"))
             temp = await UserManger.GetUserFriends(UserId,CurrentLoggedId, Users.Count);
 
@@ -83,8 +126,6 @@
         {
             Users.Add(user);
         }
-        
-        StateHasChanged();
     }
 
 }

@@ -2,6 +2,7 @@
 @using SEP3_Tier1Blazor_WASM.Data.UserData
 @using SEP3_Tier1Blazor_WASM.Models
 @using SEP3_Tier1Blazor_WASM.Authentication
+@using SEP3_Tier1Blazor_WASM.Models.UserModels
 @inject NavigationManager NavigationManager
 @inject IUserManger UserManger
 @inject AuthenticationStateProvider Authentication
@@ -11,9 +12,11 @@
     <h2>Welcome</h2>
     <div class="content">
         <EditForm OnValidSubmit=SendLoginRequest Model="login">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            
             <InputText class="form-input" placeholder="Email" @bind-Value="login.Email" @onkeypress=HideErrorMessage/>
             <InputText type="password" class="form-input" placeholder="Password" style="border-bottom: 5px;" @bind-Value="login.Password" @onkeypress=HideErrorMessage/>
-            <p class="message" style="margin-top: 0; margin-bottom: 20px; text-align: left;">Forgot password? <a @onclick=OpenRememberPasswordPage>Remember me</a></p>
 
             <input type="submit" class="form-button" value="Login"/>
             <p class="message">Not registered? <a @onclick=OpenRegisterPage>Create an account</a></p>
@@ -36,11 +39,6 @@
     private void OpenRegisterPage()
     {
         NavigationManager.NavigateTo("/registration");
-    }
-
-    private void OpenRememberPasswordPage()
-    {
-        NavigationManager.NavigateTo("/rememberPassword");
     }
 
     private async void SendLoginRequest()

@@ -1,0 +1,20 @@
+﻿<div class="container">
+    <div class="row">
+        <img src="" class="comment-avatar col-md-3">
+        <div class="content col-md-9">@Comment.Content</div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public Comment Comment { get; set; }
+    
+    private string avatarImgSrc;
+    
+    protected override async Task OnInitializedAsync()
+    {
+       // avatarImgSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(Comment.Owner.Avatar));
+    }
+
+}

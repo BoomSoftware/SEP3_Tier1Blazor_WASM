@@ -12,7 +12,11 @@ using Microsoft.Extensions.Logging;
 using SEP3_Tier1Blazor_WASM.Authentication;
 using SEP3_Tier1Blazor_WASM.Data;
 using SEP3_Tier1Blazor_WASM.Data.AdminData;
+using SEP3_Tier1Blazor_WASM.Data.ChatData;
+using SEP3_Tier1Blazor_WASM.Data.DietData;
 using SEP3_Tier1Blazor_WASM.Data.PostingData;
+using SEP3_Tier1Blazor_WASM.Data.Storage;
+using SEP3_Tier1Blazor_WASM.Data.TrainingData;
 using SEP3_Tier1Blazor_WASM.Data.UserData;
 
 namespace SEP3_Tier1Blazor_WASM
@@ -29,8 +33,12 @@ namespace SEP3_Tier1Blazor_WASM
             builder.Services.AddSingleton<IUserManger, UserManagerRest>();
             builder.Services.AddSingleton<IPostManager, PostManagerRest>();
             builder.Services.AddSingleton<IAdminManager, AdminManagerRest>();
+            builder.Services.AddSingleton<ITrainingManager, TrainingManagerRest>();
+            builder.Services.AddSingleton<IDietManager, DietManagerRest>();
+            builder.Services.AddSingleton<IChatManager, ChatManagerRest>();
             builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
             builder.Services.AddSingleton<IFileUpload, IFileUploadManager>();
+            builder.Services.AddSingleton<ILocalStorage, LocalStorageProvider>();
             builder.Services.AddAuthorizationCore(options => {
 
                 options.AddPolicy("CurrentLogged", a => 

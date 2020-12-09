@@ -2,16 +2,13 @@
 @using SEP3_Tier1Blazor_WASM.Data.UserData
 @using SEP3_Tier1Blazor_WASM.Models
 @using System.Net
+@using SEP3_Tier1Blazor_WASM.Models.UserModels
 @inject NavigationManager NavigationManager
 @inject IUserManger UserManger
 @inject IFileUpload FileUpload
 @inject AuthenticationStateProvider Authentication
 
 <div class="login-popup">
-    @if (IsEditForm)
-    {
-        <h2>Edit Account</h2>
-    }
     @if(!IsEditForm && !IsEditPassword)
     {
         <h2>Registration</h2>
@@ -25,8 +22,18 @@
     @if (IsEditForm)
     {
         <EditForm Model="@User" OnValidSubmit="EditAccount">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            
+            
             <img class="profile-avatar" src=@avatarSrc style="margin-bottom: 10px"/>
-            <InputFile OnChange="OnInputFileChanged"/>
+            <label for="file-upload" class="custom-file-upload">
+                                                <svg style="width: 2em; height: 2em; color: black; border: 0" viewBox="0 0 16 16" class="bi bi-file-earmark-image" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" d="M12 16a2 2 0 0 0 2-2V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8zM3 2a1 1 0 0 1 1-1h5.5v2A1.5 1.5 0 0 0 11 4.5h2V10l-2.083-2.083a.5.5 0 0 0-.76.063L8 11 5.835 9.7a.5.5 0 0 0-.611.076L3 12V2z"/>
+                                                    <path fill-rule="evenodd" d="M6.502 7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                                                </svg>
+                                            </label>
+            <InputFile OnChange="OnInputFileChanged" id="file-upload"/>
             @if (AccountType.Equals("RegularUser"))
             {
                 <div class="control-group">
@@ -34,19 +41,19 @@
                     <InputText class="form-input" placeholder="Last Name" @bind-Value="lastName" @onclick=HideResult />
                 </div>
             }
-                
+
             @if (AccountType.Equals("PageOwner"))
             {
                 <InputText class="form-input" placeholder="Name" @bind-Value="User.Name" @onclick=HideResult />
             }
-                 
+
             <InputText class="form-input" placeholder="Email" @bind-Value="User.Email" @onclick=HideResult />
 
             @if (AccountType.Equals("RegularUser"))
             {
                 <InputText class="form-input" placeholder="City" style="border-bottom: 5px;" @bind-Value="User.City" @onclick=HideResult />
             }
-                
+
             @if (AccountType.Equals("PageOwner"))
             {
                 <div class="control-group">
@@ -58,7 +65,7 @@
                 </div>
             }
             <InputTextArea class="form-input" placeholder="Description" @bind-Value="User.Description" @onclick=HideResult />
-            
+
             <input type="submit" style="margin-top: 0px" class="form-button" value="Edit Account"/>
             <div style="padding: 20px">@((MarkupString) resultInformation)</div>
         </EditForm>
@@ -66,6 +73,9 @@
     @if(!IsEditForm && !IsEditPassword)
     {
         <EditForm Model="@User" OnValidSubmit="CreateAccount">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            
             @if (AccountType.Equals("RegularUser"))
             {
                 <div class="control-group">
@@ -98,7 +108,7 @@
                     <InputText class="form-input" placeholder="City" style="border-bottom: 5px;" @bind-Value="User.City" @onclick=HideResult />
                 </div>
             }
-            
+
             <input type="submit" style="margin-top: 0px" class="form-button" value="Create Account"/>
             <div style="padding: 20px">@((MarkupString) resultInformation)</div>
         </EditForm>
@@ -172,30 +182,49 @@
 
     private async Task CreateAccount()
     {
+        bool flag = Validate();
         if (AccountType.Equals("RegularUser"))
-            User.Name = firstName + " " + lastName;
-        
-            bool result = await UserManger.AddNewUser(User);
-            if (result)
-                resultInformation = "<span class='info-message' style='color:green;'>Account successfully created!</span>";
-            else
-                resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
-            StateHasChanged();
+        {
+            if (String.IsNullOrEmpty(firstName) || String.IsNullOrEmpty(lastName))
+            {
+                resultInformation = "<span class='info-message' style='color:red;'>Name can not be empty</span>";
+                flag = false;
+            }   
+        }
 
-
+        if (flag)
+        {
+            if (AccountType.Equals("RegularUser"))
+                        User.Name = firstName + " " + lastName;
+                    
+                        bool result = await UserManger.AddNewUser(User);
+                        if (result)
+                            resultInformation = "<span class='info-message' style='color:green;'>Account successfully created!</span>";
+                        else
+                            resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
+                        
+        }
+        StateHasChanged();
         }
 
     private async Task EditAccount()
     {
         try
         {
-            bool result = await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
-            await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
+            bool flag = Validate();
+            
 
-            if (result)
-                resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
-            else
-                resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
+            if (flag)
+            {
+                bool result = await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
+                            await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
+
+                if (result)
+                                resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
+                            else
+                                resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
+            }
+           StateHasChanged();
         }
         catch
         {
@@ -208,7 +237,7 @@
     {
         try
         {
-            if (User.Password != null)
+            if (!String.IsNullOrEmpty(User.Password) && !String.IsNullOrEmpty(passwordConfirmation))
             {
                 if (User.Password.Equals(passwordConfirmation))
                 {
@@ -223,6 +252,10 @@
                 {
                     resultInformation = "<span class='info-message' style='color:red;'>Passwords are not the same</span>";
                 }
+            }
+            else
+            {
+                resultInformation = "<span class='info-message' style='color:red;'>Password can not be empty</span>";
             }
         }
         catch
@@ -246,6 +279,53 @@
         User.Avatar = updatedAvatar;
         
         avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(updatedAvatar));
+    }
+
+
+    private bool Validate()
+    {
+        if (AccountType.Equals("RegularUser"))
+        {
+            if (String.IsNullOrEmpty(firstName) || String.IsNullOrEmpty(lastName))
+            {
+                resultInformation = "<span class='info-message' style='color:red;'>Name can not be empty</span>";
+                return false;
+            }
+        }
+
+        if (AccountType.Equals("PageOwner"))
+        {
+            if (String.IsNullOrEmpty(User.Name))
+            {
+                resultInformation = "<span class='info-message' style='color:red;'>Name can not be empty</span>";
+                return false;
+            }
+
+            if (String.IsNullOrEmpty(User.Address.Number))
+            {
+                resultInformation = "<span class='info-message' style='color:red;'>Number can not be empty</span>";
+                return false;
+            }
+            
+            if (String.IsNullOrEmpty(User.Address.Street))
+            {
+                resultInformation = "<span class='info-message' style='color:red;'>Street can not be empty</span>";
+                return false;
+            }
+        }
+        
+        if (String.IsNullOrEmpty(User.Password) && !IsEditForm)
+        {
+            resultInformation = "<span class='info-message' style='color:red;'>Password can not be empty</span>";
+            return false;
+        }
+        
+        if ((String.IsNullOrEmpty(passwordConfirmation) || !passwordConfirmation.Equals(User.Password)) && !IsEditForm)
+        {
+            resultInformation = "<span class='info-message' style='color:red;'>Passwords are not the same</span>";
+            return false;
+        }
+        return true;
     }
 
 }

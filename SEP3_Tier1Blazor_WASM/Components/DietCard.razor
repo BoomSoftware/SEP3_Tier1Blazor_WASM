@@ -1,0 +1,200 @@
+﻿@using SEP3_Tier1Blazor_WASM.Data.DietData
+@using SEP3_Tier1Blazor_WASM.Models.Diet
+@inject IDietManager DietManager
+
+@if (!isDelete)
+{
+    <div class="col-sm-4  ">
+        <div class="diet-card">
+            @if (IsOwner)
+            {
+                <div class="header">
+                    <button class="btn btn-sm btn-light" @onclick=RemoveDiet>Remove</button>
+                    <button class="btn btn-sm btn-light" @onclick=ToggleEditMode>Edit</button>
+                </div>
+            }
+            @if (!isEditMode)
+            {
+                <div class="title">@diet.Title</div>
+                <div class="description">@diet.Description</div>
+            }
+            else
+            {
+                <EditForm Model="editedDiet" OnValidSubmit="ConfirmEdit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <InputText type="text" class="diet-edit-input" @bind-Value=editedDiet.Title />
+                    <InputTextArea class="diet-edit-input" style="height: 150px" @bind-Value=editedDiet.Description> </InputTextArea>
+                    <div>
+                        <button class="btn btn-sm btn-light" style="margin-bottom: 5px" @onclick=ToggleEditMode>Back</button>
+                        <button class="btn btn-sm btn-light" style="margin-bottom: 5px">Confirm</button>
+                    </div>
+
+                </EditForm>
+            }
+
+            <button class="diet-card-button " @onclick=ToggleMeals>Show meals</button>
+
+            @if (showMeals)
+            {
+                foreach (var meals in diet.Meals)
+                {
+                    if (IsOwner)
+                    {
+                        <div class="header">
+                            <button class="btn btn-sm btn-light" @onclick="e => RemoveMeal(meals.Id)">Remove</button>
+                            <button class="btn btn-sm btn-light" @onclick="e => ToggleEditMealMode(meals)">Edit</button>
+                        </div>
+                    }
+                    if (!isEditMealMode)
+                    {
+                        <div class="diet-creator" style="background-color: #6f42c1; text-align: left; margin-bottom: 10px">
+                                                <div style="padding: 10px">@meals.Title</div>
+                                                <div style="padding: 10px">@meals.Calories calories</div>
+                                                <div style="padding: 10px">@meals.Description</div>
+                                            </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="editedModel" OnValidSubmit="ConfirmEditMeal">
+                            <InputText @bind-Value="editedModel.Title"/>
+                            <InputNumber @bind-Value="editedModel.Calories"/>
+                            <InputText @bind-Value="editedModel.Description"/>
+                            
+                             <button class="btn btn-sm btn-light" type="submit">Edit</button>
+                        </EditForm>
+                    }
+                    
+                }
+            }
+
+            @if (IsOwner)
+            {
+                <button class="diet-card-button" @onclick=ToggleAddMode>Add new meal</button>
+                if (isAddMode)
+                {
+                    <div class="diet-creator" style="background-color: #6f42c1">
+                        <EditForm Model="newMeal" OnValidSubmit="AddNewMeal">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            
+                            
+                            <div>
+                                <label>Title</label><br/>
+                                <InputText @bind-Value="newMeal.Title"/>
+
+                            </div>
+
+                            <div>
+                                <label>Calories</label><br/>
+                                <InputNumber @bind-Value="newMeal.Calories"/>
+                            </div>
+
+                            <div>
+                                <label>Descritpion</label><br/>
+                                <InputTextArea @bind-Value="newMeal.Description"/>
+                            </div>
+
+
+                            <button class="btn btn-sm btn-light" type="submit">Add</button>
+                        </EditForm>
+                    </div>
+                }
+            }
+        </div>
+
+    </div>
+}
+
+
+@code {
+
+    [Parameter]
+    public int DietId { get; set; }
+
+    [Parameter]
+    public bool IsOwner { get; set; }
+
+
+    private DietWithOwner diet = new DietWithOwner();
+    private DietWithOwner editedDiet = new DietWithOwner();
+    private MealModel newMeal = new MealModel();
+    private MealModel editedModel = new MealModel();
+    private bool showMeals;
+    private bool isDelete;
+    private bool isEditMode;
+    private bool isEditMealMode;
+    private bool isAddMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        diet = await DietManager.GetDietById(DietId);
+        editedDiet = diet;
+        if (diet.Meals == null)
+            diet.Meals = new List<MealModel>();
+    }
+
+
+    private void ToggleMeals()
+    {
+        showMeals = !showMeals;
+    }
+
+    private async Task RemoveDiet()
+    {
+        await DietManager.DeleteDiet(DietId);
+        isDelete = true;
+    }
+
+    private void ToggleEditMode()
+    {
+        isEditMode = !isEditMode;
+    }
+
+    private void ToggleAddMode()
+    {
+        isAddMode = !isAddMode;
+    }
+
+    private async Task ConfirmEdit()
+    {
+        await DietManager.EditDiet(editedDiet);
+        diet = editedDiet;
+        isEditMode = false;
+    }
+
+    private async Task AddNewMeal()
+    {
+        int id = await DietManager.AddMealInDiet(DietId, newMeal);
+        newMeal.Id = id;
+        diet.Meals.Add(newMeal);
+        ToggleAddMode();
+    }
+
+    private void ToggleEditMealMode(MealModel model)
+    {
+        editedModel = model;
+        isEditMealMode = !isEditMealMode;
+    }
+
+    private async Task ConfirmEditMeal()
+    {
+        await DietManager.EditMealInDiet(DietId, editedModel);
+        var meal = diet.Meals.First(e => e.Id == editedModel.Id);
+        diet.Meals.Remove(meal);
+        diet.Meals.Add(editedModel);
+        StateHasChanged();
+    }
+
+    private async Task RemoveMeal(int id)
+    {
+        await DietManager.DeleteMealFromDiet(id, DietId);
+        var meal = diet.Meals.First(e => e.Id == id);
+        diet.Meals.Remove(meal);
+        StateHasChanged();
+    }
+
+
+
+
+}

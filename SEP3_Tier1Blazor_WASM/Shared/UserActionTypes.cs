@@ -28,6 +28,11 @@ namespace SEP3_Tier1Blazor_WASM.Shared
         POST_REPORT,
         ADMIN_GET_USERS,
         ADMIN_GET_POSTS,
-        HAS_IMAGES
+        HAS_IMAGES,
+        
+        MESSAGE_CREATE,
+        MESSAGE_DELETE,
+        MESSAGE_GET_LATEST,
+        MESSAGE_GET_CONVERSATION,
     }
 }

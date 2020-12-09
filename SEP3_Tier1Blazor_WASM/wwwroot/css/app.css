@@ -398,7 +398,102 @@ svg {
     background: #8249ba;
 }
 
-.post-creator #toggle-button{
+.conversation-list{
+    background-color: #4c1f70;
+    max-height: 75vh;
+    border-radius: 20px;
+    color: white;
+    height: 75vh;
+    overflow: auto;
+}
+
+.conversation-box{
+    background-color: white;
+    border-radius: 20px;
+    min-height: 59vh;
+    overflow: auto;
+    margin-left: 20px;
+    max-height: 59vh;
+    position : relative; 
+    bottom:0;
+}
+
+.conversation-small-box{
+    background-color: #8249ba;
+    padding: 10px;
+    border-radius: 20px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+.message-creator{
+    margin-top: 1vh;
+    min-height: 7vh;
+    margin-left: 20px;
+    background-color: #4c1f70;
+    border-radius: 20px;
+}
+
+.message-box{
+    background-color: #3a0647;
+    color: white;
+    padding: 10px;
+    border-radius: 30px;
+}
+.author{
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.message-creator input{
+    margin: 10px;
+    padding: 10px;
+    border: 0;
+    border-radius: 10px;
+}
+
+input[type="file"] {
+    display: none;
+}
+.custom-file-upload {
+    display: inline-block;
+    padding: 5px 5px;
+    cursor: pointer;
+}
+
+
+.receiver{
+    min-height: 7vh;
+    max-height: 7vh;
+    margin-bottom: 1vh;
+    background-color: #4c1f70;
+    margin-left: 20px;
+    border-radius: 20px;
+    padding: 10px;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.creator-img:hover .remove-img-button{
+    opacity: 1;
+}
+
+.remove-img-button{
+    border-radius: 10px;
+    background-color: #3a0647;
+    color: white;
+    border: 0;
+    opacity: 0;
+    position: absolute;
+    margin-top: 5px; 
+    margin-left: 5px;
+    transition-duration: 0.1s;
+}
+
+
+.toggle-button{
     border-radius: 20px;
     width: 40px;
     height: 40px;
@@ -406,6 +501,75 @@ svg {
     border: 0px;
     color: white;
     background-color: #6f42c1;
+    overflow: auto;
+}
+
+.diet-creator{
+    margin-top: 10px;
+    padding: 20px;
+    border-radius: 20px;
+    background-color: #4c1f70;
+    color: white;
+}
+
+.diet-card{
+    background-color: #4c1f70;
+    padding: 10px;
+    text-align: center;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+.diet-card .header{
+    width: 100%;
+    text-align: left;
+    margin-bottom: 5px;
+}
+
+.diet-card .title{
+    font-size: 20px;
+    padding: 10px;
+    color: white;
+    letter-spacing: 1px;
+}
+
+.diet-card .description{
+    color: white;
+    padding: 10px;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.diet-card-button{
+    background-color: #6f42c1;
+    padding: 5px;
+    border: 0;
+    border-radius: 10px;
+    color: white;
+}
+
+.diet-title{
+    text-align: center;
+    padding: 30px;
+    font-size: 32px;
+    color: white;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.diet-edit-input{
+    width: 80%;
+    margin-bottom: 5px;
+}
+
+.add-diet-button{
+    background-color: #F6511D;
+    padding: 10px;
+    color: white;
+    font-size: 16px;
+    width: 20%;
+    margin: auto;
+    border-radius: 20px;
+    border: 1px solid #802408;
 }
 
 
@@ -683,6 +847,70 @@ svg {
     border: 0;
 }
 
+.scheduler-customizer{
+    width: 100px;
+}
+
+.training-info{
+    text-align: center;
+    width: 50%;
+    margin: auto;
+    background-color: #521877;
+    color: white;
+    padding: 10px;
+    border-radius: 20px;
+    font-size: 17px;
+}
+
+.training-info input{
+    width: 80%;
+    margin-bottom: 5px;
+}
+
+
+.customizer-button{
+    padding: 10px;
+    border: 0;
+    border-radius: 20px;
+    background-color: #521877;
+    color: white;
+}
+
+.customizer-label{
+    font-size: 14px;
+    color: white;
+    letter-spacing: 1px;
+    font-weight: 800;
+}
+.customizer-input{
+    padding: 2px;
+    border-radius: 20px;
+    border: 0;
+    width: 100px;
+    margin-right: 5px;
+}
+.scheduler-button{
+    width: 80px;
+    background-color: #521877;
+    border: 0;
+    color: white;
+}
+
+.creator-button{
+    width: 50%;
+    margin: auto 0 10px 0;
+}
+
+.creator-input{
+    margin-bottom: 10px;
+}
+
+.creator-label{
+    margin: 0;
+    
+}
+
+
 
 .scheduler{
     background-color: white;
@@ -694,19 +922,26 @@ svg {
 .scheduler-training{
     position: absolute;
     color: white;
+    background-color: #3a0647;
 }
 .scheduler-training-title{
     padding: 0;
     margin: 0;
-    font-size: 17px;
+    font-size: 13px;
     font-weight: 600;
-    
+    top: -15px;
+    position: relative;
+}
+
+.scheduler-td:hover  {
+    background-color: rgba(0,0,0,0.1);
+    content: "Add training";
 }
 
 .scheduler-training-time{
-    padding: 5px;
+    padding: 3px;
     font-weight: 100;
-    font-size: 13px;
+    font-size: 10px;
 }
 
 .table thead th{

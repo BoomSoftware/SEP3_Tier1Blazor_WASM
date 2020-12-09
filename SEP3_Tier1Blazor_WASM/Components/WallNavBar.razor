@@ -58,7 +58,7 @@
                 <div class="@NotificationsCssClass">
                     @foreach (var notification in notificationsModels)
                     {
-                        <Notification Model="notification"/>
+                        <Notification Model="notification" CurrentLoggedName="@loggedUser.UserFullName" CurrentLoggedId="@loggedUser.UserId"/>
                     }
                 </div>
             </li>
@@ -135,22 +135,20 @@
         {
             loggedUser = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
             await JS.InvokeVoidAsync("connect", DotNetObjectReference.Create(this), loggedUser.UserId);
+            //await JS.InvokeVoidAsync("connectRequest", loggedUser.UserId);
         }
         await LoadNotifications();
         avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(loggedUser.Avatar));
-
-
         StateHasChanged();
     }
 
-    private async void SearchUsers()
+    private void SearchUsers()
     {
         if (users != null && users.Count > 0)
             searchVisible = true;
         StateHasChanged();
     }
-
-
+    
     private void OpenProfileView(User user)
     {
         NavigationManager.NavigateTo("profile/" + StaticFunctions.GetUserUri(user.Name) + "." + user.Id + "/");
@@ -194,19 +192,44 @@
     public async Task ShowFriendRequest(string notification)
     {
         NotificationModel notificationModel = JsonSerializer.Deserialize<NotificationModel>(notification);
-        notificationModel.Content = "sent you a friend invitation";
+        if (notificationModel.Value.ToString().Equals("False"))
+            notificationModel.Value = false;
+        if (notificationModel.Value.ToString().Equals("True"))
+            notificationModel.Value = true;
+        
+        
+         Console.WriteLine("Value" + notificationModel.Value);
+        if (notificationModel.ActionType == UserActionTypes.MESSAGE_CREATE.ToString())
+        {
+            notificationModel.Content = "sent you a message";
+        }
 
-        notificationsModels.Insert(0, notificationModel);
-        Console.WriteLine("Blazor" + notification);
+        if (notificationModel.ActionType == UserActionTypes.USER_FRIEND_REQUEST_SEND.ToString())
+        {
+            notificationModel.Content = "sent you a friend invitation";
+        }
+        
+        if (notificationModel.ActionType == UserActionTypes.USER_FOLLOW_PAGE.ToString() && notificationModel.Value.ToString().Equals("True"))
+        {
+            notificationModel.Content = "follows your page";
+        }
 
-        await NotificationReceived();
-        StateHasChanged();
+        if (notificationModel.ActionType != UserActionTypes.USER_FOLLOW_PAGE.ToString() || notificationModel.Value.ToString().Equals("True"))
+        {
+             notificationsModels.Insert(0, notificationModel);
+                    Console.WriteLine("Blazor" + notification);
+            
+                    await NotificationReceived();
+                    StateHasChanged();
+        }
+       
     }
 
-    private void Logout()
+    private async Task Logout()
     {
+        await JS.InvokeVoidAsync("disconnect", loggedUser.UserId);
+        NavigationManager.NavigateTo("/", true);
         ((CustomAuthenticationStateProvider) Authentication).Logout();
-        NavigationManager.NavigateTo("/");
     }
 
 
@@ -231,12 +254,12 @@
 
     private void SchedulerNavigation()
     {
-        NavigationManager.NavigateTo("/scheduler");
+        NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/scheduler", true);
     }
 
     private void DietNavigation()
     {
-        NavigationManager.NavigateTo("/diet");
+        NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/diet", true);
     }
 
     private void ChatNavigation()

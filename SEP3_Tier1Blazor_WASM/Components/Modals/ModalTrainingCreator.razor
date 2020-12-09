@@ -1,14 +1,38 @@
-﻿<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
+﻿@using SEP3_Tier1Blazor_WASM.Data.TrainingData
+@using System.Diagnostics.SymbolStore
+@using SEP3_Tier1Blazor_WASM.Models.Training
+@using SEP3_Tier1Blazor_WASM.Models.UserModels
+@inject ITrainingManager TrainingManager
+@inject IUserManger UserManger
+@inject AuthenticationStateProvider Authentication
+
+
+<div class="modal @ModalClass" tabindex="-1" role="dialog" style="display:@ModalDisplay">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Modal title</h5>
+                <h5 class="modal-title">Training Creator</h5>
                 <button type="button" class="close" @onclick=Close>
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                @DateTime.ToString()
+            @if (inCreationMode)
+            {
+                <label>@errorMessage</label>
+                <button class="customizer-button" style="width: 80px" @onclick='e => { inCreationMode = false; errorMessage = ""; }'>Back</button>
+            }
+            <div class="modal-body" style="text-align: center">
+
+                @if (!inCreationMode)
+                {
+                    <button class="customizer-button creator-button" @onclick=OnPublicTraining>Choose a public training</button>
+                    <button class="customizer-button creator-button" @onclick=OnPrivateTraining>Choose a previous training</button>
+                    <button class="customizer-button creator-button" @onclick=OnNewTraining>Create a new training</button>
+                }
+                else
+                {
+                    @creatorModeRender
+                }
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick=Close>Close</button>
@@ -25,16 +49,49 @@
 
 
 @code {
-    
+
+    [Parameter]
+    public EventCallback<TrainingSVWithTime> CreateTrainingEvent { get; set; }
+
+
     public DateTime DateTime { get; set; }
+
+    private TrainingWithOwner publicTraining = new TrainingWithOwner();
+    private TrainingWithOwner training = new TrainingWithOwner();
+    private TrainingWithOwner privateTraining = new TrainingWithOwner();
+
+
+    private int currentLoggedId;
+    private RenderFragment creatorModeRender;
+
+    private List<TrainingSVWithOwner> publicTrainings;
+    private List<TrainingShortVersion> privateTrainings;
 
     private string ModalDisplay = "none;";
     private string ModalClass = "";
     private bool ShowBackdrop = false;
+    private bool inCreationMode;
+    private string errorMessage;
 
 
     protected override async Task OnInitializedAsync()
     {
+        publicTrainings = new List<TrainingSVWithOwner>();
+        privateTrainings = new List<TrainingShortVersion>();
+
+        currentLoggedId = StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync());
+        
+        var tempPublic = await TrainingManager.GetPublicTrainings(publicTrainings.Count);
+        if (tempPublic != null)
+        {
+            publicTrainings = tempPublic;
+        }
+        
+        var tempPrivate = await TrainingManager.GetPrivateTrainingsForUser(currentLoggedId, privateTrainings.Count);
+        if (tempPrivate != null)
+        {
+            privateTrainings = tempPrivate;
+        }
     }
 
     public void Open()
@@ -52,5 +109,136 @@
         ShowBackdrop = false;
         StateHasChanged();
     }
-    
+
+    private async Task CreateTraining()
+    {
+        training.TimeStamp = DateTime;
+        if (training.Owner == null)
+        {
+            training.Owner = new SearchBarUser {UserId = currentLoggedId};
+        }
+        else
+        {
+            training.Owner.UserId = currentLoggedId;
+        }
+
+        Console.WriteLine("Adding training" + training.IsPublic);
+        int tempId = await TrainingManager.AddTraining(training);
+        await UserManger.IncrementScore(currentLoggedId, 10);
+        await CreateTrainingEvent.InvokeAsync(new TrainingSVWithTime {Id = tempId, Duration = training.DurationInMinutes, TimeStamp = training.TimeStamp, Title = training.Title});
+        Close();
     }
+
+    private async Task SelectPublicTraining()
+    {
+        try
+        {
+            if (publicTraining.Id != 0)
+            {
+                var loadedPublic = await TrainingManager.GetTrainingById(publicTraining.Id);
+                publicTraining = loadedPublic;
+                publicTraining.TimeStamp = DateTime;
+
+                if (publicTraining.Owner == null)
+                    publicTraining.Owner = new SearchBarUser {UserId = currentLoggedId};
+                else
+                    publicTraining.Owner.UserId = currentLoggedId;
+
+                int tempId = await TrainingManager.AddTraining(publicTraining);
+                await CreateTrainingEvent.InvokeAsync(new TrainingSVWithTime {Id = tempId, Duration = publicTraining.DurationInMinutes, TimeStamp = publicTraining.TimeStamp, Title = publicTraining.Title});
+                Close();
+            }
+            else
+            {
+                errorMessage = "Please select a training";
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task SelectPrivateTraining()
+    {
+        if (privateTraining.Id != 0)
+        {
+            var loadedTraining = await TrainingManager.GetTrainingById(privateTraining.Id);
+            privateTraining = loadedTraining;
+            privateTraining.TimeStamp = DateTime;
+
+            if (privateTraining.Owner == null)
+                privateTraining.Owner = new SearchBarUser {UserId = currentLoggedId};
+            else
+                privateTraining.Owner.UserId = currentLoggedId;
+
+            int newId = await TrainingManager.AddTraining(privateTraining);
+            await CreateTrainingEvent.InvokeAsync(new TrainingSVWithTime {Id = newId, Duration = privateTraining.DurationInMinutes, TimeStamp = privateTraining.TimeStamp, Title = privateTraining.Title});
+            Close();
+        }
+        else
+        {
+            errorMessage = "Please select a training";
+            StateHasChanged();
+        }
+    }
+
+    private void OnPublicTraining()
+    {
+        inCreationMode = true;
+        creatorModeRender = @<div>
+                                <h3>Select a public training:</h3>
+                                <select @bind="publicTraining.Id">
+                                    <option selected="selected"></option>
+                                    @foreach (var tra in publicTrainings)
+                                    {
+                                        <option value="@tra.Id">@tra.Title</option>
+                                    }
+                                </select><br>
+                                <button class="customizer-button creator-button" style="margin-top: 10px" @onclick="SelectPublicTraining">Add Training</button>
+                            </div>;
+    }
+
+    private void OnPrivateTraining()
+    {
+        inCreationMode = true;
+        creatorModeRender = @<div>
+                                <h3>Select one of a previous trainings:</h3>
+                                <select @bind="privateTraining.Id">
+                                    <option selected="selected"></option>
+                                    @foreach (var tra in privateTrainings)
+                                    {
+                                        <option value="@tra.Id">@tra.Title</option>
+                                    }
+                                </select><br>
+                                <button class="customizer-button creator-button" style="margin-top: 10px" @onclick="SelectPrivateTraining">Add Training</button>
+                            </div>;
+    }
+
+    private void OnNewTraining()
+    {
+        inCreationMode = true;
+        creatorModeRender = @<div>
+                                <EditForm OnValidSubmit="CreateTraining" Model="training">
+                                     <DataAnnotationsValidator />
+                                     <ValidationSummary />
+                                    
+                                    
+                                    <label class="creator-label">Title</label><br/>
+                                    <InputText class="creator-input" @bind-Value="training.Title"/><br/>
+                                    <label class="creator-label">Type</label><br/>
+                                    <InputText class="creator-input" @bind-Value="training.Type"/><br/>
+
+                                    <label class="creator-label">Duration In Minutes</label><br/>
+                                    <InputNumber class="creator-input" @bind-Value="training.DurationInMinutes"/><br/>
+                                    <label class="creator-label">Time</label><br/>
+                                    <input type="time" @bind="DateTime" @bind:format="HH:mm"/><br/>
+                                    <label class="creator-label">Make training public</label>
+                                    <InputCheckbox @bind-Value="training.IsPublic"/><br/>
+
+                                    <button class="customizer-button creator-button"style="margin-top: 10px" type="submit">Submit</button>
+                                </EditForm>
+                            </div>;
+    }
+
+}

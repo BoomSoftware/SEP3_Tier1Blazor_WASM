@@ -1,4 +1,6 @@
 ﻿@using System.Collections
+@using System.Collections.ObjectModel
+@using SEP3_Tier1Blazor_WASM.Models.UserModels
 @inject IAdminManager AdminManager
 @inject IUserManger UserManger
 @inject NavigationManager NavigationManager
@@ -46,11 +48,8 @@ else
              }
              </tbody>
          </table>
-          @if (TotalElementsNumber > currentElementId)
-             {
-                 <button @onclick=ShowMoreElements>Show More</button>
-             } 
-                </div>
+        <button @onclick=ShowMoreElements>Show More</button>
+    </div>
 }
 
 @code {
@@ -61,17 +60,13 @@ else
     [Parameter]
     public int PageElementsNumber { get; set; }
 
-    private IList<UserShortVersion> users;
+    private IList<UserShortVersion> users = new Collection<UserShortVersion>();
     private IList<UserShortVersion> usersToShow;
-    
-    private int currentElementId = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        users = await AdminManager.GetUsers(PageElementsNumber, currentElementId);
+        users = await AdminManager.GetUsers(PageElementsNumber, users.Count);
         usersToShow = users;
-
-        currentElementId++;
     }
 
     private async Task RemoveUser(int id)
@@ -98,16 +93,16 @@ else
 
     private async Task ShowMoreElements()
     {
-        IList<UserShortVersion> newUsersList = await AdminManager.GetUsers(PageElementsNumber, currentElementId);
-        foreach (var user in newUsersList)
+        var newUsersList = await AdminManager.GetUsers(5, users.Count);
+        if (newUsersList != null && newUsersList.Any())
         {
-            users.Add(user);
+            foreach (var user in newUsersList)
+                    {
+                        users.Add(user);
+                    }
+                    usersToShow = users;
+            StateHasChanged();
         }
-        usersToShow = users;
-        StateHasChanged();
-        Console.WriteLine("CURENT ID= " + currentElementId);
-
-        currentElementId++;
     }
 
     private string ConvertUserAvatar(byte[] avatar)

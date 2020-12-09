@@ -1,11 +1,12 @@
 ﻿let LastPostId;
-let PostBlazor;
+let MessageBody;
 
 let postVisibility = false;
 
 window.addEventListener("scroll", checkingLastPostVisibility)
 
 function checkingLastPostVisibility(){
+    console.log("scrolling");
     if(LastPostId != null && !postVisibility){
         var post = document.getElementById(LastPostId);
         var position = post.getBoundingClientRect();
@@ -33,4 +34,11 @@ function setLastPostId(id){
 function initializeComponent(dotnet){
     if(PostBlazor == null)
         PostBlazor = dotnet
+}
+
+function scrollToBottom (id) {
+    console.log("scroll")
+    MessageBody = document.getElementById(id);
+    MessageBody.scrollTop = MessageBody.scrollHeight - MessageBody.clientHeight;
+    MessageBody.addEventListener("scroll", checkingLastPostVisibility)
 }

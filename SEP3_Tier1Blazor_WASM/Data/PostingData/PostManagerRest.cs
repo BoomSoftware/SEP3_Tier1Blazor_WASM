@@ -6,6 +6,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using SEP3_Tier1Blazor_WASM.Models;
+using SEP3_Tier1Blazor_WASM.Models.Post;
+using SEP3_Tier1Blazor_WASM.Models.UserModels;
 using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Data.PostingData
@@ -19,18 +21,12 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
         public PostManagerRest()
         {
             client = Client;
-            uri = "http://localhost:8080/posts";
+            uri = "https://localhost:8443/posts";
         }
         
         public async Task<int> AddNewPost(PostShortVersion post)
         {
-            string postSerialized = JsonSerializer.Serialize(post);
-            StringContent content = new StringContent(
-                postSerialized,
-                Encoding.UTF8,
-                "Application/json"
-            );
-            HttpResponseMessage response = await client.PostAsync(uri, content);
+            HttpResponseMessage response = await client.PostAsync(uri, PrepareObjectForRequest(post));
             return int.Parse(await response.Content.ReadAsStringAsync());
         }
 
@@ -41,13 +37,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
 
         public async Task EditPost(PostShortVersion postShortVersion)
         {
-            string postSerialized = JsonSerializer.Serialize(postShortVersion);
-            StringContent content = new StringContent(
-                postSerialized,
-                Encoding.UTF8,
-                "Application/json"
-                );
-            await client.PutAsync($"{uri}/{postShortVersion.Id}", content);
+            await client.PutAsync($"{uri}/{postShortVersion.Id}", PrepareObjectForRequest(postShortVersion));
         }
 
         public async Task<PostShortVersion> GetPostById(int postId, int userId)
@@ -55,19 +45,13 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
             HttpResponseMessage result = await client.GetAsync($"{uri}?postId={postId}&userId={userId}");
             
             string responseString = await result.Content.ReadAsStringAsync();
+            Console.WriteLine("Response" + responseString);
             return JsonSerializer.Deserialize<PostShortVersion>(responseString);
         }
 
         public async Task<int> AddCommentToPost(int postId, Comment comment)
         {
-            string commentSerialized = JsonSerializer.Serialize(comment);
-            StringContent content = new StringContent(
-                commentSerialized,
-                Encoding.UTF8,
-                "Application/json"
-                );
-
-           HttpResponseMessage response =  await client.PostAsync($"{uri}/{postId}", content);
+            HttpResponseMessage response =  await client.PostAsync($"{uri}/{postId}", PrepareObjectForRequest(comment));
            return int.Parse(await response.Content.ReadAsStringAsync());
 
         }
@@ -82,7 +66,6 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
             HttpResponseMessage result = await client.GetAsync($"{uri}/profile?byId={userId}&offset={offset}");
 
             string temp = await result.Content.ReadAsStringAsync();
-            Console.WriteLine("FFFFFFFFFFFFFFFFFFFFFFFFFF" + temp);
             if (!string.IsNullOrEmpty(temp))
             {
                 string content = await result.Content.ReadAsStringAsync();
@@ -111,15 +94,8 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
                 Value = value,
                 ActionType = actionType.ToString()
             };
-
-            string actionSerialize = JsonSerializer.Serialize(postAction);
-            StringContent content = new StringContent(
-                actionSerialize,
-                Encoding.UTF8,
-                "Application/json"
-                );
-
-            await client.PostAsync($"{uri}/actions", content);
+            
+            await client.PostAsync($"{uri}/actions", PrepareObjectForRequest(postAction));
 
 
         }

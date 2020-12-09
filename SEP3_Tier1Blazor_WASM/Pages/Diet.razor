@@ -1,0 +1,243 @@
+﻿@page "/profile/{UserArgument}/Diet"
+@using SEP3_Tier1Blazor_WASM.Data.DietData
+@using SEP3_Tier1Blazor_WASM.Models.Diet
+@using SEP3_Tier1Blazor_WASM.Models.UserModels
+@inject IDietManager DietManager
+@inject AuthenticationStateProvider Authentication
+
+
+<ModalUserList @ref="@modalUserList"/>
+@if (currentLoggedId == userId)
+{
+    <div class="row content-row justify-content-center">
+        <div class="col-12" style="text-align: center">
+            <div class="add-diet-button" @onclick=ToggleAddMode>Create new diet</div>
+        </div>
+
+
+        @if (isAddMode)
+        {
+
+            <div class="diet-creator">
+                <EditForm Model="newDiet" OnValidSubmit="CreateNewDiet">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    
+                    <div>
+                        <label>Title</label><br>
+                        <InputText @bind-Value="newDiet.Title"/>
+                    </div>
+
+                    <div>
+                        <label>Description</label><br>
+                        <InputTextArea @bind-Value="newDiet.Description"/>
+                    </div>
+
+                    <div>
+                        <label>Make diet public</label>
+                        <InputCheckbox @bind-Value="newDiet.Global"/>
+                    </div>
+
+
+                    <button class="btn btn-sm btn-light" type="submit">Add diet</button>
+                </EditForm>
+
+            </div>
+
+        }
+
+    </div>
+    
+        <div class="diet-title">Public diets</div>
+        <div class="row content-row justify-content-center">
+            @foreach (var diet in publicDiets)
+            {
+                <DietCard DietId="diet.Id" IsOwner="@CheckIfUserIsOwner(diet.Owner.UserId)"/>
+            }
+            
+            <button class="scheduler-button" @onclick=LoadMorePublic>Load more</button>
+        </div>
+
+    }
+
+    @if (userId != currentLoggedId)
+    {
+         <div class="diet-title">User's diets</div>
+    }
+    else
+    {
+        <div class="diet-title">Own diets</div>
+        <div style="text-align: center">
+            <button class="scheduler-button" @onclick=ShareDiet>Share</button>
+        </div>
+        
+    }
+   
+    <div class="row content-row justify-content-center">
+        @foreach (var diet in privateDiets)
+        {
+            <DietCard DietId="diet.Id" IsOwner="@isOwner"/>
+        }
+         <button class="scheduler-button" @onclick=LoadMorePrivate>Load more</button>
+    </div>
+
+
+@code {
+
+    [CascadingParameter]
+    public ModalException ModalException { get; set; }
+    
+    [Parameter]
+    public string UserArgument { get; set; }
+
+    private ModalUserList modalUserList;
+    private int userId;
+    private int currentLoggedId;
+    private List<DietSVWithOwner> publicDiets = new List<DietSVWithOwner>();
+    private List<DietShortVersion> privateDiets = new List<DietShortVersion>();
+    private DietWithOwner newDiet = new DietWithOwner();
+    private bool isOwner;
+    private bool isAddMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentLoggedId = StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync());
+
+            string[] tempUser = UserArgument.Split('.');
+            if (tempUser.Length == 3)
+                userId = Int32.Parse(tempUser[2]);
+            if (tempUser.Length == 2)
+                userId = Int32.Parse(tempUser[1]);
+            isOwner = currentLoggedId == userId;
+            await LoadDiets();
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+       
+    }
+
+    private async Task CreateNewDiet()
+    {
+        try
+        {
+            newDiet.Meals = new List<MealModel>();
+            if (newDiet.Owner == null)
+                newDiet.Owner = new SearchBarUser();
+            newDiet.Owner.UserId = currentLoggedId;
+            int id = await DietManager.AddDiet(newDiet);
+            newDiet.Id = id;
+
+            if (!newDiet.Global)
+                privateDiets.Add(newDiet);
+            else
+                publicDiets.Add(new DietSVWithOwner {Description = newDiet.Description, Global = newDiet.Global, Id = newDiet.Id, Owner = newDiet.Owner, Title = newDiet.Title});
+            isAddMode = false;
+            newDiet = new DietWithOwner();
+            StateHasChanged();
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+       
+    }
+
+
+    private async Task LoadDiets()
+    {
+        try
+        {
+            var tempPublic = await DietManager.GetPublicDiets(publicDiets.Count);
+            if (tempPublic != null)
+                publicDiets = tempPublic;
+
+            var tempPrivate = await DietManager.GetPrivateDietsForUser(userId, privateDiets.Count);
+            if (tempPrivate != null)
+                privateDiets = tempPrivate;
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+       
+    }
+
+
+
+    private async Task LoadMorePublic()
+    {
+        try
+        {
+            var temp = await DietManager.GetPublicDiets(publicDiets.Count);
+            if (temp != null)
+            {
+                foreach (var d in temp)
+                {
+                    publicDiets.Add(d);
+                }
+            }
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+      
+    }
+
+    private async Task LoadMorePrivate()
+    {
+        try
+        {
+            var temp = await DietManager.GetPrivateDietsForUser(userId, privateDiets.Count);
+            if (temp != null)
+            {
+                foreach (var d in temp)
+                {
+                    privateDiets.Add(d);
+                }
+            }
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+      
+    }
+
+    private void ToggleAddMode()
+    {
+        isAddMode = !isAddMode;
+    }
+
+
+    private async Task ShareDiet()
+    {
+        try
+        {
+            modalUserList.CurrentLoggedId = currentLoggedId;
+            modalUserList.UserId = currentLoggedId;
+            modalUserList.Title = "Share with friends";
+            modalUserList.ListType = "FriendList";
+            modalUserList.Action = UserActionTypes.USER_SHARE_DIETS;
+            modalUserList.StatusNumber = 1;
+            await modalUserList.LoadUsersWithStatus();
+            modalUserList.IsShare = true;
+            modalUserList.Open();
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+
+    }
+
+    private bool CheckIfUserIsOwner(int id)
+    {
+        return currentLoggedId == id;
+    }
+
+}

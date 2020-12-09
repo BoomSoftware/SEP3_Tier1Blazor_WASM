@@ -1,0 +1,109 @@
+﻿@using System.Text.Json
+@using Microsoft.Extensions.Primitives
+@inject IJSRuntime JS
+
+
+<div class="row content-row @SetMessagePosition()" id="@MessageModel.Id">
+    <div class="col-12 d-flex @SetMessagePosition()" @onclick=ToggleMessageTime>
+        @if (!isOwner)
+        {
+             if (OtherUser != null)
+             {
+                 <div class="col-1">
+                     <img class="img" style="width: 50px; border-radius: 30px; margin-left: -30px" src="@StaticFunctions.GetUserAvatar(OtherUser)" alt="avatar">
+                 </div>
+             }
+        }
+
+        <div class="message-box d-flex align-self-center col-5">
+            <div class="container-fluid">
+                <div class="row content-row">
+                    <p class="message-content" style="@messageStyle">@MessageModel.Content</p>
+                </div>
+
+                @if (MessageModel.Picture != null)
+                {
+                    <div class="row content-row">
+                        <img class="img-fluid" src="@StaticFunctions.GetImgFromByteArray(MessageModel.Picture)" alt="image">
+                    </div>
+                }
+            </div>
+
+
+        </div>
+
+        @if (isOwner)
+        {
+            <div class="col-1">
+                <img class="img" style="width: 50px; border-radius: 30px" src="@StaticFunctions.GetUserAvatar(CurrentLogged)" alt="avatar">
+            </div>
+        }
+    </div>
+
+    @if (timeVisibility)
+    {
+        <div class="text-muted">@MessageModel.TimeStamp </div>
+        <br>
+        if (isOwner && (MessageModel.Content != null && !MessageModel.Content.Equals(removeMessage)))
+        {
+            <div class="link text-muted" style="margin-left: 3px" @onclick=RemoveMessage>Delete</div>
+        }
+    }
+</div>
+
+
+@code {
+
+    [Parameter]
+    public MessageModel MessageModel { get; set; }
+
+    [Parameter]
+    public UserShortVersion CurrentLogged { get; set; }
+
+    [Parameter]
+    public UserShortVersion OtherUser { get; set; }
+
+    private bool timeVisibility;
+    private bool isOwner = false;
+    private string messageStyle = "";
+    private string removeMessage = "Message has been deleted";
+
+    protected override void OnInitialized()
+    {
+        if (MessageModel.Content == null)
+        {
+            SetMessageAsRemoved();
+        }
+    }
+
+
+    private void ToggleMessageTime()
+    {
+        timeVisibility = !timeVisibility;
+    }
+
+    private string SetMessagePosition()
+    {
+        if (CurrentLogged.UserId == MessageModel.SenderId)
+        {
+            isOwner = true;
+            return "justify-content-end";
+        }
+        return "justify-content-start";
+    }
+
+    private async Task RemoveMessage()
+    {
+        await JS.InvokeAsync<string>("deleteMessage", JsonSerializer.Serialize(MessageModel));
+        SetMessageAsRemoved();
+    }
+
+    private void SetMessageAsRemoved()
+    {
+        MessageModel.Content = removeMessage;
+        if (MessageModel.Picture != null)
+            MessageModel.Picture = null;
+        messageStyle = "font-style: italic;";
+    }
+
+}

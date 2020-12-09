@@ -1,7 +1,9 @@
 ﻿@page "/FitnessWall"
+@using System.Text.Json
 @attribute [Authorize("RegularUser")]
 @inject AuthenticationStateProvider Authentication
 @inject IPostManager PostManager
+@inject IUserManger UserManger
 @inject IJSRuntime JS
 
 <div class="container-fluid">
@@ -23,25 +25,43 @@
             }
         </div>
         <div class="col-1">
-            avalialble users
+            @foreach (var user in onlineUsers)
+            {
+                <UserInList  User="@user" IsShare="false" OnClickAction="OpenChat"/>
+            }
         </div>
     </div>
 </div>
 
 
 @code {
-
+    [CascadingParameter]
+    public ModalException ModalException { get; set; }
+    
+    
     private List<int> tempPostsIds;
     private List<int> postsIds;
     private bool reloadList;
+    private int currentLoggedId;
     private int offset = 0;
+    private List<UserShortVersion> onlineUsers = new List<UserShortVersion>();
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        tempPostsIds = new List<int>();
-        postsIds = new List<int>();
-        await LoadPosts();
-        await JS.InvokeVoidAsync("initializeComponent", DotNetObjectReference.Create(this));
+        try
+        {
+            currentLoggedId = StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync());
+            tempPostsIds = new List<int>();
+            postsIds = new List<int>();
+            await LoadPosts();
+            await LoadOnlineUsers();
+            await JS.InvokeVoidAsync("initializeComponent", DotNetObjectReference.Create(this));
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+      
     }
 
     private void NewPostCreated(int id)
@@ -57,22 +77,65 @@
     [JSInvokable("LoadMorePosts")]
     public async Task LoadPosts()
     {
-        List<int> temp = await PostManager.GetPostsForUser(StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()).UserId, postsIds.Count);
-        if (temp != null)
+        try
         {
-            foreach (var post in temp)
+            List<int> temp = await PostManager.GetPostsForUser(StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()).UserId, postsIds.Count);
+            if (temp != null)
             {
-                postsIds.Add(post);
+                foreach (var post in temp)
+                {
+                    postsIds.Add(post);
+                }
+                if (postsIds.Count > 0 && temp.Count != 0)
+                {
+                    await JS.InvokeAsync<string>("setLastPostId", postsIds.ToList().Last());
+                }
+                else
+                {
+                    await JS.InvokeAsync<string>("setLastPostId", null);
+                }
             }
-            if (postsIds.Count > 0 && temp.Count != 0)
-            {
-                await JS.InvokeAsync<string>("setLastPostId", postsIds.ToList().Last());
-            }
-            else
-            {
-                await JS.InvokeAsync<string>("setLastPostId", null);
-            }
+            StateHasChanged();
         }
+        catch
+        {
+            ModalException.Open();
+        }
+     
+    }
+
+
+    private async Task LoadOnlineUsers()
+    {
+        try
+        {
+            var temp = await UserManger.GetOnlineUsers(currentLoggedId);
+            if (temp != null)
+                onlineUsers = temp;
+        }
+        catch
+        {
+            ModalException.Open();
+        }
+      
+    }
+
+    [JSInvokable("AddOnlineUser")]
+    public void AddOnlineUser(string user)
+    {
+        UserShortVersion userShortVersion = JsonSerializer.Deserialize<UserShortVersion>(user);
+        if(onlineUsers.All(e => e.UserId != userShortVersion.UserId))
+            onlineUsers.Add(userShortVersion);
+        StateHasChanged();
+    }
+
+    [JSInvokable("DeleteOnlineUser")]
+    public void DeleteOnlineUser(string id)
+    {
+        Console.WriteLine("blazor delete id" + id);
+        var temp = onlineUsers.ToList();
+        temp.RemoveAll(e => e.UserId == int.Parse(id));
+        onlineUsers = temp;
         StateHasChanged();
     }
 
