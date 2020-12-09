@@ -42,7 +42,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
             if (editedUser.Avatar == currentLogged.Avatar)
                 editedUser.Avatar = null;
 
-            HttpResponseMessage response = await client.PutAsync($"{uri}/{editedUser.Id}", PrepareObjectForRequest(currentLogged));
+            HttpResponseMessage response = await client.PutAsync($"{uri}/{editedUser.Id}", PrepareObjectForRequest(editedUser));
             if (response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.BadRequest)
                 return true;
             return false;
