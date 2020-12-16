@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace SEP3_Tier1Blazor_WASM.Models.UserModels
 {
+    /// <summary>
+    /// Class for storing login credentials
+    /// </summary>
     public class Login
     {
         [Required]

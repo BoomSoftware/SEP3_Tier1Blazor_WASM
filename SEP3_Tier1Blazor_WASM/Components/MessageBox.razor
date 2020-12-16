@@ -2,7 +2,6 @@
 @using Microsoft.Extensions.Primitives
 @inject IJSRuntime JS
 
-
 <div class="row content-row @SetMessagePosition()" id="@MessageModel.Id">
     <div class="col-12 d-flex @SetMessagePosition()" @onclick=ToggleMessageTime>
         @if (!isOwner)
@@ -56,10 +55,8 @@
 
     [Parameter]
     public MessageModel MessageModel { get; set; }
-
     [Parameter]
     public UserShortVersion CurrentLogged { get; set; }
-
     [Parameter]
     public UserShortVersion OtherUser { get; set; }
 
@@ -75,13 +72,18 @@
             SetMessageAsRemoved();
         }
     }
-
-
+    
+    /// <summary>
+    /// Shows and hides messages creation time
+    /// </summary>
     private void ToggleMessageTime()
     {
         timeVisibility = !timeVisibility;
     }
 
+    /// <summary>
+    /// Sets message possible based on the owner of the message
+    /// </summary>
     private string SetMessagePosition()
     {
         if (CurrentLogged.UserId == MessageModel.SenderId)
@@ -92,12 +94,18 @@
         return "justify-content-start";
     }
 
+    /// <summary>
+    /// Sends a request to remove a message
+    /// </summary>
     private async Task RemoveMessage()
     {
         await JS.InvokeAsync<string>("deleteMessage", JsonSerializer.Serialize(MessageModel));
         SetMessageAsRemoved();
     }
 
+    /// <summary>
+    /// Updates message content to removed
+    /// </summary>
     private void SetMessageAsRemoved()
     {
         MessageModel.Content = removeMessage;
@@ -105,5 +113,4 @@
             MessageModel.Picture = null;
         messageStyle = "font-style: italic;";
     }
-
 }

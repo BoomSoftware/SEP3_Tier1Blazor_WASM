@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using SEP3_Tier1Blazor_WASM.Models;
 using SEP3_Tier1Blazor_WASM.Models.Training;
 
 namespace SEP3_Tier1Blazor_WASM.Data.TrainingData
 {
+    /// <summary>
+    /// Class responsible for connecting to API and managing requests related with training
+    /// </summary>
     public class TrainingManagerRest : DataManager, ITrainingManager
     {
         private HttpClient client;
         private string uri;
-
 
         public TrainingManagerRest()
         {
@@ -21,17 +21,18 @@ namespace SEP3_Tier1Blazor_WASM.Data.TrainingData
             uri = "https://localhost:8443/trainings";
         }
         
-        
         public async Task<int> AddTraining(TrainingWithOwner training)
         {
-            HttpResponseMessage responseMessage = await client.PostAsync(uri, PrepareObjectForRequest(training));
+            HttpResponseMessage responseMessage = await client.PostAsync(
+                uri, 
+                PrepareObjectForRequest(training)
+                );
             return int.Parse(await responseMessage.Content.ReadAsStringAsync());
         }
 
         public async Task<TrainingWithOwner> GetTrainingById(int id)
         {
             string temp = await client.GetStringAsync($"{uri}/{id}");
-            Console.WriteLine("GetTrainingByID: "+ temp);
             return JsonSerializer.Deserialize<TrainingWithOwner>(temp);
         }
 
@@ -39,10 +40,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.TrainingData
         {
             string temp = await client.GetStringAsync($"{uri}/public?offset={offset}");
             if (!String.IsNullOrEmpty(temp))
-            {
                 return JsonSerializer.Deserialize<List<TrainingSVWithOwner>>(temp);
-            }
-
             return null;
         }
 
@@ -50,16 +48,8 @@ namespace SEP3_Tier1Blazor_WASM.Data.TrainingData
         {
             string temp = await client.GetStringAsync($"{uri}/private?userId={userId}&offset={offset}");
             if (!String.IsNullOrEmpty(temp))
-            {
-                 return JsonSerializer.Deserialize<List<TrainingShortVersion>>(temp);
-            }
-
+                return JsonSerializer.Deserialize<List<TrainingShortVersion>>(temp);
             return null;
-        }
-
-        public Task<List<TrainingShortVersion>> GetTrainingsForUser(int userId, int offset)
-        {
-            throw new System.NotImplementedException();
         }
 
         public async Task<List<TrainingSVWithTime>> GetTrainingsInWeekForUser(int userId, int weekNumber)
@@ -68,10 +58,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.TrainingData
             HttpResponseMessage responseMessage = await client.GetAsync($"{uri}?userId={userId}&weekNumber={weekNumber}");
             string content = await responseMessage.Content.ReadAsStringAsync();
             if (!string.IsNullOrEmpty(content))
-            {
-               return JsonSerializer.Deserialize<List<TrainingSVWithTime>>(content);
-            }
-            
+                return JsonSerializer.Deserialize<List<TrainingSVWithTime>>(content);
             return null;
         }
 
@@ -86,10 +73,9 @@ namespace SEP3_Tier1Blazor_WASM.Data.TrainingData
         }
 
         public async Task<int> AddExerciseToTraining(int trainingId, ExerciseModel exercise)
-        {
-            
-           HttpResponseMessage responseMessage = await client.PostAsync($"{uri}/{trainingId}/exercises", PrepareObjectForRequest(exercise));
-           return int.Parse(await responseMessage.Content.ReadAsStringAsync());
+        { 
+          HttpResponseMessage responseMessage = await client.PostAsync($"{uri}/{trainingId}/exercises", PrepareObjectForRequest(exercise));
+          return int.Parse(await responseMessage.Content.ReadAsStringAsync());
         }
 
         public async Task EditExerciseInTraining(int trainingId,ExerciseModel exercise)
@@ -106,10 +92,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.TrainingData
         {
             string temp = await client.GetStringAsync($"{uri}/today?userId={userId}");
             if (!String.IsNullOrEmpty(temp))
-            {
                 return JsonSerializer.Deserialize<List<TrainingSVWithTime>>(temp);
-            }
-
             return null;
         }
     }

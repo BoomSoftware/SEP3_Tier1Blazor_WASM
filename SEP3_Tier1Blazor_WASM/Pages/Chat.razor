@@ -69,12 +69,10 @@
 
 </div>
 
-
 @code {
 
     [CascadingParameter]
     public ModalException ModalException { get; set; }
-    
     [Parameter]
     public string UserArgument { get; set; }
 
@@ -105,12 +103,14 @@
         
     }
 
-
     protected override async void OnAfterRender(bool firstRender)
     {
         await JS.InvokeAsync<string>("scrollToBottom", "conversation");
     }
 
+    /// <summary>
+    /// Loads conversation based on the parameters
+    /// </summary>
     private async Task LoadChat()
     {
         try
@@ -146,6 +146,9 @@
        
     }
 
+    /// <summary>
+    /// Loads more posts after receiving javascript request
+    /// </summary>
     [JSInvokable("LoadMorePosts")]
     public async Task LoadMoreMessages()
     {Console.WriteLine("Insert1");
@@ -160,6 +163,9 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Displays new message received and update a view
+    /// </summary>
     [JSInvokable("NewMessageReceived")]
     public async Task NewMessageReceived(string message)
     {
@@ -234,6 +240,9 @@
         }
     }
 
+    /// <summary>
+    /// Sends a message to a current open conversation
+    /// </summary>
     private async Task SendMessage(KeyboardEventArgs eventArgs)
     {
         if (eventArgs.Key == "Enter")
@@ -248,6 +257,9 @@
         }
     }
 
+    /// <summary>
+    /// Sets and displays image uploaded by a user
+    /// </summary>
     private async Task OnInputFileChanged(IFileListEntry[] files)
     {
         byte[] messageImage = await FileUpload.ConvertFile(files.FirstOrDefault());
@@ -257,6 +269,9 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Sends a delete message request
+    /// </summary>
     [JSInvokable("MessageDeleted")]
     public async Task MessageDeleted(string message)
     {
@@ -267,6 +282,9 @@
         Console.WriteLine("Message deleted in blazor");
     }
 
+    /// <summary>
+    /// Removes uploaded image
+    /// </summary>
     private void RemovePicture()
     {
         newMessage.HasImage = false;
@@ -275,6 +293,9 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Load more conversations to the view
+    /// </summary>
     private async Task LoadMoreConversations()
     {
         try
@@ -295,5 +316,4 @@
         }
       
     }
-
 }

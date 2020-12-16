@@ -2,6 +2,9 @@
 
 namespace SEP3_Tier1Blazor_WASM.Models.Post
 {
+    /// <summary>
+    /// Class for storing post action
+    /// </summary>
     public class PostAction
     {
         [JsonPropertyName("userId")]

@@ -6,6 +6,9 @@ using SEP3_Tier1Blazor_WASM.Models.UserModels;
 
 namespace SEP3_Tier1Blazor_WASM.Models.Post
 {
+    /// <summary>
+    /// Class for storing post short version
+    /// </summary>
     public class PostShortVersion
     {
         [JsonPropertyName("id")]

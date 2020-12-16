@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using SEP3_Tier1Blazor_WASM.Models;
 using SEP3_Tier1Blazor_WASM.Models.Post;
 using SEP3_Tier1Blazor_WASM.Models.UserModels;
 using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Data.PostingData
 {
+    /// <summary>
+    /// Class responsible for connecting to API and managing requests related with post
+    /// </summary>
     public class PostManagerRest : DataManager, IPostManager
     {
-        
         private HttpClient client;
         private string uri;
         
@@ -43,15 +41,13 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
         public async Task<PostShortVersion> GetPostById(int postId, int userId)
         { 
             HttpResponseMessage result = await client.GetAsync($"{uri}?postId={postId}&userId={userId}");
-            
             string responseString = await result.Content.ReadAsStringAsync();
-            Console.WriteLine("Response" + responseString);
             return JsonSerializer.Deserialize<PostShortVersion>(responseString);
         }
 
         public async Task<int> AddCommentToPost(int postId, Comment comment)
         {
-            HttpResponseMessage response =  await client.PostAsync($"{uri}/{postId}", PrepareObjectForRequest(comment));
+           HttpResponseMessage response =  await client.PostAsync($"{uri}/{postId}", PrepareObjectForRequest(comment));
            return int.Parse(await response.Content.ReadAsStringAsync());
 
         }
@@ -64,14 +60,12 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
         public async Task<List<int>> GetPostByUser(int userId, int offset)
         {
             HttpResponseMessage result = await client.GetAsync($"{uri}/profile?byId={userId}&offset={offset}");
-
             string temp = await result.Content.ReadAsStringAsync();
             if (!string.IsNullOrEmpty(temp))
             {
                 string content = await result.Content.ReadAsStringAsync();
                 return JsonSerializer.Deserialize<List<int>>(content);
             }
-                
             return null;
         }
 
@@ -94,10 +88,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
                 Value = value,
                 ActionType = actionType.ToString()
             };
-            
             await client.PostAsync($"{uri}/actions", PrepareObjectForRequest(postAction));
-
-
         }
 
         public async Task<List<int>> GetPostsForUser(int userId, int offset)
@@ -105,9 +96,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.PostingData
             HttpResponseMessage response = await client.GetAsync($"{uri}/wall?forId={userId}&offset={offset}");
             string temp = await response.Content.ReadAsStringAsync();
             if (!string.IsNullOrEmpty(temp))
-            {
                 return JsonSerializer.Deserialize<List<int>>(temp);
-            }
             return null;
         }
     }

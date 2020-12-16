@@ -71,6 +71,9 @@
         currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
     }
 
+    /// <summary>
+    /// Sends a request for adding a post and displays it
+    /// </summary>
     private async Task CreatePost()
     {
         postShortVersion.Owner = currentLogged;
@@ -87,6 +90,10 @@
         }
     }
 
+    /// <summary>
+    /// Gets a picture given by a user and displays it
+    /// <param name="files">The given image given by user</param>
+    /// </summary>
     private async Task OnInputFileChanged(IFileListEntry[] files)
     {
         byte[] postImage = await FileUpload.ConvertFile(files.FirstOrDefault());
@@ -95,12 +102,18 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Shows and hides creation form
+    /// </summary>
     private void ToggleCreator()
     {
         isCreationProcess = !isCreationProcess;
         StateHasChanged();
     }
     
+    /// <summary>
+    /// Removes picture given by a user
+    /// </summary>
     private void RemovePicture()
     {
         postShortVersion.Picture = null;

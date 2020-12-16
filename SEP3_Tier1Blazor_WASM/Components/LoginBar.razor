@@ -16,10 +16,12 @@
     private bool showPopup = false;
     private string popupVisibility;
     private int popupTopPosition;
-    private static int count = 1;
     private RenderFragment CustomRender { get; set; }
     private PopupLoginBox popupLoginBox;
 
+    /// <summary>
+    /// Loads a component to a view
+    /// </summary>
     private void RenderComponent()
     {
         if (!showPopup)
@@ -36,12 +38,18 @@
         }
     }
 
+    /// <summary>
+    /// Close a popup login box
+    /// </summary>
     public void ClosePopupBox()
     {
         CustomRender = null;
         showPopup = false;
     }
 
+    /// <summary>
+    /// Navigates to home page
+    /// </summary>
     private void ShowIndexPage()
     {
         NavigationManager.NavigateTo("/");

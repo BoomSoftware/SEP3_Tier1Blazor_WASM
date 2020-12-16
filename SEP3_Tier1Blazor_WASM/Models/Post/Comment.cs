@@ -4,6 +4,9 @@ using SEP3_Tier1Blazor_WASM.Models.UserModels;
 
 namespace SEP3_Tier1Blazor_WASM.Models.Post
 {
+    /// <summary>
+    /// Class for storing comment
+    /// </summary>
     public class Comment
     {
         [JsonPropertyName("id")]

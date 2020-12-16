@@ -130,19 +130,14 @@
 @code {
     [CascadingParameter]
     public ModalException ModalException { get; set; }
-
     [Parameter]
     public string AccountType { get; set; }
-
     [Parameter]
     public bool IsEditForm { get; set; }
-    
     [Parameter]
     public bool IsEditPassword { get; set; }
-
     [Parameter]
     public User EditedUser { get; set; }
-
 
     private string firstName;
     private string lastName;
@@ -180,6 +175,9 @@
         }
     }
 
+    /// <summary>
+    /// Sends a request to create a new account to the lower layer
+    /// </summary>
     private async Task CreateAccount()
     {
         bool flag = Validate();
@@ -195,30 +193,29 @@
         if (flag)
         {
             if (AccountType.Equals("RegularUser"))
-                        User.Name = firstName + " " + lastName;
+                User.Name = firstName + " " + lastName;
                     
-                        bool result = await UserManger.AddNewUser(User);
-                        if (result)
-                            resultInformation = "<span class='info-message' style='color:green;'>Account successfully created!</span>";
-                        else
-                            resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
-                        
+            bool result = await UserManger.AddNewUser(User);
+            if (result)
+                resultInformation = "<span class='info-message' style='color:green;'>Account successfully created!</span>";
+            else
+                resultInformation = "<span class='info-message' style='color:red;'>Server connection error, try later</span>";
         }
         StateHasChanged();
         }
 
+    /// <summary>
+    /// Sends a request to edit a given account
+    /// </summary>
     private async Task EditAccount()
     {
         try
         {
             bool flag = Validate();
-            
-
             if (flag)
             {
                 bool result = await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
                             await UserManger.EditUser(User, StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync()));
-
                 if (result)
                                 resultInformation = "<span class='info-message' style='color:green;'>Account successfully edited!</span>";
                             else
@@ -233,6 +230,9 @@
        
     }
 
+    /// <summary>
+    /// Sends a request to edit password for a given user
+    /// </summary>
     private async Task EditPassword()
     {
         try
@@ -265,6 +265,9 @@
          
     }
 
+    /// <summary>
+    /// Hides a result of the previous action
+    /// </summary>
     private void HideResult()
     {
         if (!resultInformation.Equals(""))
@@ -273,6 +276,9 @@
         }
     }
 
+    /// <summary>
+    /// Sets a image given by user
+    /// </summary>
     private async Task OnInputFileChanged(IFileListEntry[] files)
     {
         byte[] updatedAvatar = await FileUpload.ConvertFile(files.FirstOrDefault());
@@ -280,8 +286,10 @@
         
         avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(updatedAvatar));
     }
-
-
+    
+    /// <summary>
+    /// Validates information given by a user
+    /// </summary>
     private bool Validate()
     {
         if (AccountType.Equals("RegularUser"))
@@ -327,5 +335,4 @@
         }
         return true;
     }
-
 }

@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace SEP3_Tier1Blazor_WASM.Models.Chat
 {
+    /// <summary>
+    /// Class for storing message
+    /// </summary>
     public class MessageModel
     {
         [JsonPropertyName("id")]

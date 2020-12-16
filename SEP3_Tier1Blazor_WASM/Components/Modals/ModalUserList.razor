@@ -79,7 +79,10 @@
         Users = new List<UserShortVersion>();
         
     }
-
+    
+    /// <summary>
+    /// Opens popup box responsible for displaying a list of users
+    /// </summary>
     public void Open()
     {
         ModalDisplay = "block;";
@@ -87,7 +90,10 @@
         ShowBackdrop = true;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Closes popup window
+    /// </summary>
     private void Close()
     {
         ModalDisplay = "none";
@@ -95,7 +101,10 @@
         ShowBackdrop = false;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Sends a request for loading more users to the list and displays a result
+    /// </summary>
     private async Task LoadMoreUsers()
     {
         if (IsShare)
@@ -109,13 +118,19 @@
         
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Displays users in a list according to the status given by a parameter
+    /// </summary>
     public async Task LoadUsersWithStatus()
     {
         if (ListType.Equals("FriendList"))
             usersWithStatus = await UserManger.GetUserFriends(UserId,CurrentLoggedId, Users.Count);
     }
-
+    
+    /// <summary>
+    /// Displays users in a list if a status is not set
+    /// </summary>
     public async Task LoadUsersWithoutStatus()
     {
         List<UserShortVersionWithStatus> temp = new List<UserShortVersionWithStatus>();

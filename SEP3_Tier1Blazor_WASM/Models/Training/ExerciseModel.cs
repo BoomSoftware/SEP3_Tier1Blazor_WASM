@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace SEP3_Tier1Blazor_WASM.Models.Training
 {
+    /// <summary>
+    /// Class for storing an exercise
+    /// </summary>
     public class ExerciseModel
     {
         [JsonPropertyName("id")]

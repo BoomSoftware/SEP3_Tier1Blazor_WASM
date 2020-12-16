@@ -6,7 +6,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Modal title</h5>
+                <h5 class="modal-title">Connection error</h5>
             </div>
             <div class="modal-body">
                 @if (ReloadException)
@@ -38,13 +38,10 @@
     private string ModalDisplay = "none;";
     private string ModalClass = "";
     private bool ShowBackdrop = false;
-    
 
-
-    protected override async Task OnInitializedAsync()
-    {
-    }
-
+    /// <summary>
+    /// Open popup box responsible for inform user about unexpected error
+    /// </summary>
     public void Open()
     {
         ModalDisplay = "block;";
@@ -53,14 +50,20 @@
         StateHasChanged();
     }
     
-    public void Close()
+    /// <summary>
+    /// Closes popup box
+    /// </summary>
+    private void Close()
     {
         ModalDisplay = "none";
         ModalClass = "";
         ShowBackdrop = false;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Approves error and navigates user to a home page
+    /// </summary>
     private void ConfirmException()
     {
         Close();
@@ -70,6 +73,3 @@
     }
 }
 
-@code {
-
-}

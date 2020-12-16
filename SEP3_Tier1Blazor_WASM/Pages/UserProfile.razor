@@ -1,6 +1,5 @@
 ﻿@page "/profile/{UserArgument}/"
 @attribute [Authorize]
-
 @inject IUserManger UserManger
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
@@ -9,7 +8,6 @@
 @inject IPostManager PostManager
 @using System.Text.Json
 @using SEP3_Tier1Blazor_WASM.Authentication
-
 
 <ModalUserList @ref=@userListModal/>
 @if (user != null)
@@ -207,7 +205,6 @@
 
     [CascadingParameter]
     public ModalException ModalException { get; set; }
-
     [Parameter]
     public string UserArgument { get; set; }
 
@@ -252,7 +249,10 @@
             ModalException.Open();
         }
     }
-
+    
+    /// <summary>
+    /// Sends a request to delete an account
+    /// </summary>
     private async Task OnDeleteAccount()
     {
         try
@@ -267,6 +267,9 @@
         }
     }
 
+    /// <summary>
+    /// Sets and displays a given images
+    /// </summary>
     private async Task OnInputFileChanged(IFileListEntry[] files)
     {
         User editedUser = new User();
@@ -284,6 +287,9 @@
         }
     }
 
+    /// <summary>
+    /// Opens friend list
+    /// </summary>
     private async Task OpenFriendList()
     {
     try
@@ -301,6 +307,9 @@
     }
     }
 
+    /// <summary>
+    /// Sends a request to interact with other user base on option selected by user
+    /// </summary>
     private async Task InteractWithUser(UserActionTypes action, bool value)
     {
         try
@@ -348,6 +357,9 @@
         }
     }
 
+    /// <summary>
+    /// Shows gyms in the user's city
+    /// </summary>
     private async Task ShowGymsInTheCity()
     {
         try
@@ -365,6 +377,9 @@
         }
     }
 
+    /// <summary>
+    /// Loads more posts after receiving javascript request
+    /// </summary>
     [JSInvokable("LoadMorePosts")]
     public async Task LoadPosts()
     {
@@ -395,6 +410,10 @@
      
     }
 
+    /// <summary>
+    /// Displays a new created post with a given id
+    /// <param name="id">The id of a new post</param>
+    /// </summary>
     private void NewPostCreated(int newId)
     {
         reloadPostList = true;
@@ -405,21 +424,34 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Navigates to user's scheduler
+    /// </summary>
     private void OpenUserScheduler()
     {
         NavigationManager.NavigateTo($"profile/{UserArgument}/scheduler");
     }
-
+    
+    /// <summary>
+    /// Navigates to user's diet
+    /// </summary>
     private void OpenUserDiets()
     {
         NavigationManager.NavigateTo($"profile/{UserArgument}/diet");
     }
 
+    /// <summary>
+    /// Navigates to chat with selected user
+    /// </summary>
     private void OpenChat()
     {
         NavigationManager.NavigateTo($"chat/{UserArgument}/");
     }
     
+    /// <summary>
+    /// Sends a request to rate a page with a given value
+    /// <param name="value">The value for rating</param>
+    /// </summary>
     private void RatePage(int value)
     {
         if (!user.UserStatus[7])
@@ -428,13 +460,4 @@
             UserManger.InteractWithUser(currentLogged.UserId, user.Id, UserActionTypes.USER_RATE_PAGE, value+1);
         }
     }
-
-
-
-
-
-
-
-
-
 }

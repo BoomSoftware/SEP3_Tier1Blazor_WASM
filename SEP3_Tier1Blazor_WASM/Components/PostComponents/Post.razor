@@ -164,9 +164,7 @@ else
     }
 }
 
-
 @code {
-
     [CascadingParameter]
     public ModalException ModalException { get; set; }
 
@@ -195,8 +193,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-    // try
-    // {
+    try
+    {
         currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
         Console.WriteLine("Postid" + PostID);
         PostData = await PostManager.GetPostById(PostID, currentLogged.UserId);
@@ -205,31 +203,43 @@ else
         if (PostData.Picture != null)
             pictureSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(PostData.Picture));
         reactionSrc = "img/muscule-liked.png";
-    // }
-    // catch
-    // {
-    //     ModalException.Open();
-    // }
     }
-
+    catch
+    {
+        ModalException.Open();
+    }
+    }
+    
+    /// <summary>
+    /// Navigates to a selected user profile
+    /// </summary>
     private void OpenAuthorProfile(UserShortVersion user)
     {
         string path = StaticFunctions.GetUserUri(user.UserFullName);
         NavigationManager.NavigateTo($"profile/{path}.{user.UserId}/", true);
     }
-
+    
+    /// <summary>
+    /// Shows post's comment section
+    /// </summary>
     private async Task ShowCommentSection()
     {
         PostData.Comments = await PostManager.GetPostComments(PostID);
         commentSectionVisibility = !commentSectionVisibility;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Converts image from byte array to a string which can be used by a browser
+    /// </summary>
     private void ConvertPostImage()
     {
         pictureSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(PostData.Picture));
     }
-
+    
+    /// <summary>
+    /// Sends a request to add a new comment and displays it in a comment section
+    /// </summary>
     private async Task SendComment(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
@@ -260,18 +270,27 @@ else
            
         }
     }
-
+    
+    /// <summary>
+    /// Shows and hides option list
+    /// </summary>
     private void TogglePostOptions()
     {
         optionsVisibility = !optionsVisibility;
     }
-
+    
+    /// <summary>
+    /// Enables post edit mode
+    /// </summary>
     private void StartEditMode()
     {
         TogglePostOptions();
         isEditMode = true;
     }
-
+    
+    /// <summary>
+    /// Loads an image given in a FileText input
+    /// </summary>
     private async Task OnInputFileChanged(IFileListEntry[] files)
     {
         byte[] postImage = await FileUpload.ConvertFile(files.FirstOrDefault());
@@ -280,6 +299,9 @@ else
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Sends a request to a lower layer to edit a comment and displays updated version
+    /// </summary>
     private async Task ConfirmEdit()
     {
         try
@@ -296,13 +318,19 @@ else
             ModalException.Open();
         }
     }
-
+    
+    /// <summary>
+    /// Cancels edit mode
+    /// </summary>
     private void CancelEdit()
     {
         isEditMode = false;
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Sends a request to a lower layer for deleting post and remove it from view
+    /// </summary>
     private async Task DeletePost()
     {
         try
@@ -320,6 +348,10 @@ else
         }
     }
 
+    /// <summary>
+    /// Sends a request to a lower layer fro deleting a comment add removes it from a comment section
+    /// <param name="id">The given id of a comment</param>
+    /// </summary>
     private async Task RemoveComment(int id)
     {
         try
@@ -338,11 +370,18 @@ else
         }
     }
 
+    /// <summary>
+    /// Creates a string for the authorized view's parameter
+    /// <param name="commentOwnerId">The given id of a comment owner</param>
+    /// </summary>
     private string GetAuthorizedString(int commentOwnerId)
     {
         return PostData.Owner.UserId + "." + commentOwnerId;
     }
 
+    /// <summary>
+    /// Opens reaction list with all users reacted to the selected post
+    /// </summary>
     private async Task OpenReactionList()
     {
         try
@@ -361,6 +400,9 @@ else
         }
     }
 
+    /// <summary>
+    /// Adds reaction to a selected post or removes if it was added before
+    /// </summary>
     private async Task OnReactionButton(bool value)
     {
         try
@@ -385,6 +427,9 @@ else
         }
     }
 
+    /// <summary>
+    /// Reports selected post or remove report if it was reported before
+    /// </summary>
     private async Task OnReportAction(bool value)
     {
         try

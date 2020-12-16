@@ -40,6 +40,9 @@
 
     private string perspectiveCss => $"transform: perspective(500px) rotateY({rotationY}deg);";
 
+    /// <summary>
+    /// Rotates title by mouse moving event
+    /// </summary>
     private void RotateBox(MouseEventArgs e)
     {
         if (tempX != null)
@@ -52,6 +55,9 @@
         tempX = e.ClientX;
     }
 
+    /// <summary>
+    /// Navigates to register page
+    /// </summary>
     private void OpenRegisterPage()
     {
         NavigationManager.NavigateTo("/registration");

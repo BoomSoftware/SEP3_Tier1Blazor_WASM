@@ -2,6 +2,9 @@
 
 namespace SEP3_Tier1Blazor_WASM.Models.Training
 {
+    /// <summary>
+    /// Class for storing training in short version
+    /// </summary>
     public class TrainingShortVersion
     {
         [JsonPropertyName("trainingId")]

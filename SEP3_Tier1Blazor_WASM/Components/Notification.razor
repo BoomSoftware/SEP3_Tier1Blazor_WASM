@@ -8,16 +8,16 @@
 @code {
     [CascadingParameter] 
     public ModalException ModalException { get; set; }
-    
     [Parameter]
     public NotificationModel Model { get; set; }
-    
     [Parameter]
     public string CurrentLoggedName { get; set; }
-    
     [Parameter]
     public int CurrentLoggedId { get; set; }
     
+    /// <summary>
+    /// Reacts based on the notification received from javascript file
+    /// </summary>
     private async Task React()
     {
         try

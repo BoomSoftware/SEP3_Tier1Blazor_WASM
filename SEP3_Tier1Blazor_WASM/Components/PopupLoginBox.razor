@@ -36,11 +36,17 @@
     private Login login = new Login();
     private bool errorVisibility = false;
 
+    /// <summary>
+    /// Navigates to the register page
+    /// </summary>
     private void OpenRegisterPage()
     {
         NavigationManager.NavigateTo("/registration");
     }
 
+    /// <summary>
+    /// Sends a request to login to the lower layer and received based on the response
+    /// </summary>
     private async void SendLoginRequest()
     {
         try
@@ -74,6 +80,9 @@
         }
     }
 
+    /// <summary>
+    /// Hides error mesage
+    /// </summary>
     private void HideErrorMessage()
     {
         errorVisibility = false;

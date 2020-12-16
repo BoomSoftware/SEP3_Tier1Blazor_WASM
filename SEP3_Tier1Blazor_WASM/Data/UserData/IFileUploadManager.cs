@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 namespace SEP3_Tier1Blazor_WASM.Data.UserData
 {
+    /// <summary>
+    /// Class responsible for managing uploaded files
+    /// </summary>
     public class IFileUploadManager : IFileUpload
     {
-
         public async Task<byte[]> ConvertFile(IFileListEntry file)
         {
             using (var ms = new MemoryStream())

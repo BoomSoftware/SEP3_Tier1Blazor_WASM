@@ -11,9 +11,7 @@
 @inject IUserManger UserManger
 @inject IJSRuntime JS;
 
-
-<audio id="notificationSound" src="/sound/notification.mp3"/>
-
+<audio id="notificationSound" src="/sound/notification.mp3" />
 <nav class="mb-1 navbar navbar-expand-lg navbar-dark secondary-color lighten-1 main-navbar">
     <a class="navbar-brand" href="#">
         <img src="/img/logo.png" width="75" height="75" class="link" @onclick=HomeNavigation>
@@ -45,8 +43,6 @@
             <li class="nav-item">
                 <a class="nav-link link" @onclick=ChatNavigation>Chat</a>
             </li>
-
-
         </ul>
         <ul class="navbar-nav ml-auto nav-flex-icons">
             <li class="nav-item avatar dropdown without-focus-style " tabindex="0" @onfocusout="@(() => collapseNotification = false)">
@@ -68,9 +64,9 @@
                     <a class="nav-link link" data-toggle="dropdown"
                        aria-haspopup="true" aria-expanded="false">
                         <img src=@avatarSrc class="rounded-circle z-depth-0"
-                             alt="avatar image" width="50" height="50" @onclick=ToggleAvatarMenu @onfocusout=FocusOut>
+                             alt="avatar image" width="50" height="50" @onclick=ToggleAvatarMenu>
                     </a>
-                    <div class="@AvatarMenuCssClass" @onfocusout=FocusOut>
+                    <div class="@AvatarMenuCssClass">
                         <a class="dropdown-item" @onclick=OpenProfileView
                            autofocus>
                             Profile
@@ -80,7 +76,6 @@
                     </div>
                 </li>
             }
-
         </ul>
     </div>
 </nav>
@@ -89,27 +84,27 @@
     private string searchValue { get; set; }
     private RenderFragment CustomRender;
     private RenderFragment notificationRender;
-    bool searchVisible = false;
+    private bool searchVisible = false;
     private IList<User> users;
     private string avatarSrc;
     private IList<NotificationModel> notificationsModels;
     private UserShortVersion loggedUser;
     private List<SearchBarUser> foundUsers;
 
-    bool collapseNavMenu = true;
-    bool collapseAvatarMenu = false;
-    bool collapseNotification = false;
-    bool collapseSearch = false;
+    private bool collapseNavMenu = true;
+    private bool collapseAvatarMenu = false;
+    private bool collapseNotification = false;
+    private bool collapseSearch = false;
 
-    string baseMenuClass = "navbar-collapse";
-    string baseAvatarMenuClass = "dropdown-menu dropdown-menu-lg-right dropdown-secondary";
-    string baseSearchCss = "dropdown-menu dropdown-menu-lg-right dropdown-secondary pre-scrollable search-dropdown";
-    string baseNotificationMenuClass = "dropdown-menu dropdown-menu-lg-right dropdown-secondary pre-scrollable notification-dropdown";
+    private string baseMenuClass = "navbar-collapse";
+    private string baseAvatarMenuClass = "dropdown-menu dropdown-menu-lg-right dropdown-secondary";
+    private string baseSearchCss = "dropdown-menu dropdown-menu-lg-right dropdown-secondary pre-scrollable search-dropdown";
+    private string baseNotificationMenuClass = "dropdown-menu dropdown-menu-lg-right dropdown-secondary pre-scrollable notification-dropdown";
 
-    string NotificationsCssClass => baseNotificationMenuClass + (collapseNotification ? " show" : "");
-    string NavMenuCssClass => baseMenuClass + (collapseNavMenu ? " collapse" : "");
-    string AvatarMenuCssClass => baseAvatarMenuClass + (collapseAvatarMenu ? " show" : "");
-    string SearchCssClass => baseSearchCss + (collapseSearch ? " show" : "");
+    private string NotificationsCssClass => baseNotificationMenuClass + (collapseNotification ? " show" : "");
+    private string NavMenuCssClass => baseMenuClass + (collapseNavMenu ? " collapse" : "");
+    private string AvatarMenuCssClass => baseAvatarMenuClass + (collapseAvatarMenu ? " show" : "");
+    private string SearchCssClass => baseSearchCss + (collapseSearch ? " show" : "");
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,13 +130,15 @@
         {
             loggedUser = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
             await JS.InvokeVoidAsync("connect", DotNetObjectReference.Create(this), loggedUser.UserId);
-            //await JS.InvokeVoidAsync("connectRequest", loggedUser.UserId);
         }
         await LoadNotifications();
         avatarSrc = String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(loggedUser.Avatar));
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Displays received user list
+    /// </summary>
     private void SearchUsers()
     {
         if (users != null && users.Count > 0)
@@ -149,45 +146,68 @@
         StateHasChanged();
     }
     
+    /// <summary>
+    /// Opens user profile
+    /// </summary>
     private void OpenProfileView(User user)
     {
         NavigationManager.NavigateTo("profile/" + StaticFunctions.GetUserUri(user.Name) + "." + user.Id + "/");
     }
 
+    /// <summary>
+    /// Shows and hides navigation menu
+    /// </summary>
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
 
+    /// <summary>
+    /// Shows and hides avatar menu
+    /// </summary>
     private void ToggleAvatarMenu()
     {
         collapseAvatarMenu = !collapseAvatarMenu;
     }
 
+    /// <summary>
+    /// Shows and hides search list
+    /// </summary>
     private void ToggleSearch()
     {
         collapseSearch = !collapseSearch;
     }
 
+    /// <summary>
+    /// Shows and hides navigation list
+    /// </summary>
     private void ToggleNotificationMenu()
     {
         if (notificationsModels.Any())
             collapseNotification = !collapseNotification;
     }
 
+    /// <summary>
+    /// Navigates to edit profile view
+    /// </summary>
     private void OpenEditAccountView()
     {
         ToggleAvatarMenu();
         NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/edit");
     }
 
+    /// <summary>
+    /// Navigates to profile view
+    /// </summary>
     private void OpenProfileView()
     {
         ToggleAvatarMenu();
         NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/", true);
     }
-
-
+    
+    /// <summary>
+    /// Receives a notifications form javascript and displays it in a notification list
+    /// </summary>
     [JSInvokable("ShowFriendRequest")]
     public async Task ShowFriendRequest(string notification)
     {
@@ -216,23 +236,26 @@
 
         if (notificationModel.ActionType != UserActionTypes.USER_FOLLOW_PAGE.ToString() || notificationModel.Value.ToString().Equals("True"))
         {
-             notificationsModels.Insert(0, notificationModel);
-                    Console.WriteLine("Blazor" + notification);
-            
-                    await NotificationReceived();
-                    StateHasChanged();
+            notificationsModels.Insert(0, notificationModel);
+            await NotificationReceived();
+            StateHasChanged();
         }
        
     }
 
+    /// <summary>
+    /// Logouts form the application
+    /// </summary>
     private async Task Logout()
     {
         await JS.InvokeVoidAsync("disconnect", loggedUser.UserId);
         NavigationManager.NavigateTo("/", true);
         ((CustomAuthenticationStateProvider) Authentication).Logout();
     }
-
-
+    
+    /// <summary>
+    /// Sends request to javascript file to pla sound and update page title after notification is received
+    /// </summary>
     private async Task NotificationReceived()
     {
         await JS.InvokeAsync<string>("playNotificationSound");
@@ -242,31 +265,41 @@
                              </svg>;
     }
 
-    private void FocusOut()
-    {
-        Console.WriteLine("focus out");
-    }
-
+    /// <summary>
+    /// Navigates to home page
+    /// </summary>
     private void HomeNavigation()
     {
         NavigationManager.NavigateTo("/", true);
     }
 
+    /// <summary>
+    /// Navigates to scheduler view
+    /// </summary>
     private void SchedulerNavigation()
     {
         NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/scheduler", true);
     }
 
+    /// <summary>
+    /// Navigates to diet view
+    /// </summary>
     private void DietNavigation()
     {
         NavigationManager.NavigateTo($"profile/{StaticFunctions.GetUserUri(loggedUser.UserFullName)}.{loggedUser.UserId}/diet", true);
     }
 
+    /// <summary>
+    /// Navigates to chat view
+    /// </summary>
     private void ChatNavigation()
     {
         NavigationManager.NavigateTo("/chat");
     }
 
+    /// <summary>
+    /// Calls function to send request for searching user based on a letters from test field
+    /// </summary>
     private async Task OnSearchUser(KeyboardEventArgs e)
     {
         if (!searchValue.Equals(""))
@@ -280,11 +313,13 @@
         }
     }
 
+    /// <summary>
+    /// Load a list of users received from javascript
+    /// </summary>
     [JSInvokable("ShowSearchbarUsers")]
     public async Task ShowSearchbarUsers(string usersSearchbar)
     {
         List<SearchBarUser> searchBarUsers = JsonSerializer.Deserialize<List<SearchBarUser>>(usersSearchbar);
-        
         foundUsers = new List<SearchBarUser>();
         foundUsers = searchBarUsers;
 
@@ -293,15 +328,20 @@
         else
             collapseSearch = true;
         StateHasChanged();
-        Console.WriteLine(foundUsers.Count);
     }
 
+    /// <summary>
+    /// Navigates to user profile from search bar
+    /// </summary>
     private void OpenSearchUserProfile(string name, int id)
     {
         string uri = StaticFunctions.GetUserUri(name);
         NavigationManager.NavigateTo($"profile/{uri}.{id}/", true);
     }
 
+    /// <summary>
+    /// Sends a request to javascript file for search a users
+    /// </summary>
     private async Task SendSearchRequest()
     {
         FilterUserRequest filterUserRequest = new FilterUserRequest
@@ -312,6 +352,9 @@
         await JS.InvokeAsync<string>("sendSearchValue", JsonSerializer.Serialize(filterUserRequest));
     }
 
+    /// <summary>
+    /// Loads and displays notifications stored in a user account
+    /// </summary>
     private async Task LoadNotifications()
     {
         List<NotificationModel> temp = await UserManger.GetNotificationsForUser(loggedUser.UserId);
@@ -322,8 +365,6 @@
                 notificationsModels.Add(not);
             }
         }
-        
         StateHasChanged();
     }
-
 }

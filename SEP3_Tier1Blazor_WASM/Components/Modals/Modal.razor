@@ -136,7 +136,6 @@
 
 @code {
 
-
     [Parameter]
     public int TrainingId { get; set; }
 
@@ -157,7 +156,7 @@
     private UserShortVersion currentLogged;
     private bool isAddingMode;
     private string errorMessage = "";
-
+    
     protected override async Task OnInitializedAsync()
     {
         currentLogged = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());
@@ -165,7 +164,10 @@
         TrainingModel.Exercises = new List<ExerciseModel>();
         exercises = new List<ExerciseModel>();
     }
-
+    
+    /// <summary>
+    /// Opens popup box for managing training
+    /// </summary>
     public void Open()
     {
         ModalDisplay = "block;";
@@ -173,7 +175,10 @@
         ShowBackdrop = true;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Closes popup box
+    /// </summary>
     public void Close()
     {
         ModalDisplay = "none";
@@ -183,14 +188,20 @@
         isEditMode = false;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Enables edit mode for selected training
+    /// </summary>
     private void EnableEditMode()
     {
         isEditMode = true;
         editedTraining = TrainingModel;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Deletes training and informs parent component and sends request to lower layer
+    /// </summary>
     private async Task OnDeleteTraining()
     {
         try
@@ -203,7 +214,10 @@
         {
         }
     }
-
+    
+    /// <summary>
+    /// Confirms edit with new information and sends request to lower layer
+    /// </summary>
     private async Task ConfirmEdit()
     {
         try
@@ -220,13 +234,19 @@
         {
         }
     }
-
+    
+    /// <summary>
+    /// Closes edit mode
+    /// </summary>
     private void CancelEdit()
     {
         isEditMode = false;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Creates and adds new exercise to a selected training and sends request to lower layer
+    /// </summary>
     private async Task CreateNewExercise()
     {
         try
@@ -240,7 +260,10 @@
         {
         }
     }
-
+    
+    /// <summary>
+    /// Sets training as completed and sends request to lower layer
+    /// </summary>
     private async Task MakeTrainingComplete()
     {
         try
@@ -254,19 +277,27 @@
         {
         }
     }
-
-
+    
+    /// <summary>
+    /// Loads training using an Id given as a parameter
+    /// </summary>
     public async Task LoadTraining()
     {
         TrainingModel = await TrainingManager.GetTrainingById(TrainingId);
         exercises = TrainingModel.Exercises;
     }
-
+    
+    /// <summary>
+    /// Displays and hides a form responsible for creating a new exercise
+    /// </summary>
     private void ToggleCreator()
     {
         isAddingMode = !isAddingMode;
     }
-
+    
+    /// <summary>
+    /// Validates information given by an user
+    /// </summary>
     private bool ValidateEdit()
     {
         if (String.IsNullOrEmpty(editedTraining.Title))

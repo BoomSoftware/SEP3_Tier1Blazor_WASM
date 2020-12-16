@@ -115,9 +115,8 @@
     [Parameter]
     public bool IsOwner { get; set; }
 
-
-    private DietWithOwner diet = new DietWithOwner();
-    private DietWithOwner editedDiet = new DietWithOwner();
+    private DietModel diet = new DietWithOwner();
+    private DietModel editedDiet = new DietWithOwner();
     private MealModel newMeal = new MealModel();
     private MealModel editedModel = new MealModel();
     private bool showMeals;
@@ -134,28 +133,42 @@
             diet.Meals = new List<MealModel>();
     }
 
-
+    /// <summary>
+    /// Shows and hides meals section
+    /// </summary>
     private void ToggleMeals()
     {
         showMeals = !showMeals;
     }
 
+    /// <summary>
+    /// Sends a request to remove diet and removes it from a view
+    /// </summary>
     private async Task RemoveDiet()
     {
         await DietManager.DeleteDiet(DietId);
         isDelete = true;
     }
 
+    /// <summary>
+    /// Shows and hide edit diet mode
+    /// </summary>
     private void ToggleEditMode()
     {
         isEditMode = !isEditMode;
     }
 
+    /// <summary>
+    /// Shows and hide add diet mode
+    /// </summary>
     private void ToggleAddMode()
     {
         isAddMode = !isAddMode;
     }
 
+    /// <summary>
+    /// Sends a request to edit diet and updates it a view
+    /// </summary>
     private async Task ConfirmEdit()
     {
         await DietManager.EditDiet(editedDiet);
@@ -163,6 +176,9 @@
         isEditMode = false;
     }
 
+    /// <summary>
+    /// Sends a request to add meal into a selected diet and displays it in a view
+    /// </summary>
     private async Task AddNewMeal()
     {
         int id = await DietManager.AddMealInDiet(DietId, newMeal);
@@ -171,12 +187,19 @@
         ToggleAddMode();
     }
 
+    /// <summary>
+    /// Shows and hide edit mode for a selected meal
+    /// <param name="model">The given meal</param>
+    /// </summary>
     private void ToggleEditMealMode(MealModel model)
     {
         editedModel = model;
         isEditMealMode = !isEditMealMode;
     }
 
+    /// <summary>
+    /// Sends a request to edit meal into a selected diet and updates a view
+    /// </summary>
     private async Task ConfirmEditMeal()
     {
         await DietManager.EditMealInDiet(DietId, editedModel);
@@ -186,6 +209,9 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Sends a request to remove meal from selected diet and updates a view
+    /// </summary>
     private async Task RemoveMeal(int id)
     {
         await DietManager.DeleteMealFromDiet(id, DietId);
@@ -193,8 +219,4 @@
         diet.Meals.Remove(meal);
         StateHasChanged();
     }
-
-
-
-
 }

@@ -10,17 +10,17 @@
         </div>
 </div>
 
-
 @code {
 
     [Parameter]
     public UserSVWithMessage User { get; set; }
     
-
     private string selectedCss = "";
-
-
-    private async Task OnSelectConversation()
+    
+    /// <summary>
+    /// Loads a conversation with a selected user
+    /// </summary>
+    private void OnSelectConversation()
     {
         string url = StaticFunctions.GetUserUri(User.UserFullName);
         NavigationManager.NavigateTo($"chat/{url}.{User.UserId}/", true);

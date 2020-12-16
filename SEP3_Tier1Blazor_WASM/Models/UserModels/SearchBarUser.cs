@@ -2,6 +2,9 @@
 
 namespace SEP3_Tier1Blazor_WASM.Models.UserModels
 {
+    /// <summary>
+    /// Class for storing searchbar user
+    /// </summary>
     public class SearchBarUser
     {
         [JsonPropertyName("userId")]

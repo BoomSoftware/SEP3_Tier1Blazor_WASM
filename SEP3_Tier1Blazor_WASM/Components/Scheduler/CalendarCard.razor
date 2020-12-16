@@ -60,7 +60,10 @@
 
         await LoadTrainings();
     }
-
+    
+    /// <summary>
+    /// Loads and displays today trainings
+    /// </summary>
     private async Task LoadTrainings()
     {
         var loaded = await TrainingManager.GetTrainingForToday(currentLogged.UserId);
@@ -68,7 +71,6 @@
             trainings = loaded;
         else
             trainings = new List<TrainingSVWithTime>();
-        Console.WriteLine("XXXXXXXXXx" + loaded);
         StateHasChanged();
     }
 

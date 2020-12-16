@@ -12,6 +12,9 @@ namespace SEP3_Tier1Blazor_WASM.Data.DietData
         private readonly HttpClient client;
         private readonly string uri;
         
+        /// <summary>
+        /// Class responsible for connecting to API and managing requests related with diet
+        /// </summary>
         public DietManagerRest()
         {
             client = Client;
@@ -33,10 +36,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.DietData
         {
             string responseMessage = await client.GetStringAsync($"{uri}/public?offset={offset}");
             if (!String.IsNullOrEmpty(responseMessage))
-            {
-                 return JsonSerializer.Deserialize<List<DietSVWithOwner>>(responseMessage);
-            }
-
+                return JsonSerializer.Deserialize<List<DietSVWithOwner>>(responseMessage);
             return null;
         }
 
@@ -44,10 +44,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.DietData
         {
             string responseMessage = await client.GetStringAsync($"{uri}/private?userId={userId}&offset={offset}");
             if (!String.IsNullOrEmpty(responseMessage))
-            {
                 return JsonSerializer.Deserialize<List<DietShortVersion>>(responseMessage);
-            }
-
             return null;
         }
 
@@ -63,8 +60,7 @@ namespace SEP3_Tier1Blazor_WASM.Data.DietData
 
         public async Task<int> AddMealInDiet(int dietId, MealModel mealModel)
         {
-            HttpResponseMessage responseMessage =
-                await client.PostAsync($"{uri}/{dietId}/meals", PrepareObjectForRequest(mealModel));
+            HttpResponseMessage responseMessage = await client.PostAsync($"{uri}/{dietId}/meals", PrepareObjectForRequest(mealModel));
             return int.Parse(await responseMessage.Content.ReadAsStringAsync());
         }
 

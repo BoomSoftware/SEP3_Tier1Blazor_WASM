@@ -2,6 +2,9 @@
 
 namespace SEP3_Tier1Blazor_WASM.Models.Notification
 {
+    /// <summary>
+    /// Class for storing notification
+    /// </summary>
     public class NotificationModel
     {
         [JsonPropertyName("id")]

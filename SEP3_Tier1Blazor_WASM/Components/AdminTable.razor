@@ -5,7 +5,6 @@
 @inject IUserManger UserManger
 @inject NavigationManager NavigationManager
 
-
 @if (usersToShow == null)
 {
     <p>
@@ -56,7 +55,6 @@ else
 
     [Parameter]
     public int TotalElementsNumber { get; set; }
-
     [Parameter]
     public int PageElementsNumber { get; set; }
 
@@ -69,6 +67,10 @@ else
         usersToShow = users;
     }
 
+    /// <summary>
+    /// Sends a remove user with a given id request to a lower layer
+    /// <param name="id">The given user id</param> 
+    /// </summary>
     private async Task RemoveUser(int id)
     {
         try
@@ -83,7 +85,12 @@ else
             Console.WriteLine(e);
         }
     }
-
+    
+    /// <summary>
+    /// Opens user view based on a given values
+    /// <param name="id">The given user id</param>
+    /// <param name="name">The given user name</param>
+    /// </summary>
     private void OpenUserProfile(string name, int id)
     {
         string path = StaticFunctions.GetUserUri(name);
@@ -91,6 +98,9 @@ else
         NavigationManager.NavigateTo($"profile/{path}.{id}/");
     }
 
+    /// <summary>
+    /// Loads and displays more users in a table
+    /// </summary>
     private async Task ShowMoreElements()
     {
         var newUsersList = await AdminManager.GetUsers(5, users.Count);
@@ -105,6 +115,9 @@ else
         }
     }
 
+    /// <summary>
+    /// Converts user avatar from byte array to a string readable by browser
+    /// </summary>
     private string ConvertUserAvatar(byte[] avatar)
     {
        return String.Format("data:image/gif;base64,{0}", Convert.ToBase64String(avatar));

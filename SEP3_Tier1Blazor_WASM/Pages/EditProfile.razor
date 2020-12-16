@@ -1,8 +1,8 @@
 ﻿@inject IUserManger UserManger
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider Authentication
+@attribute [Authorize]
 @page "/profile/{UserArgument}/edit/"
-
 
 <div class="container-fluid">
     <div class="main">
@@ -27,12 +27,10 @@
 </div>
 
 @code {
-
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
     [Parameter]
     public string UserArgument { get; set; }
-
-    [CascadingParameter]
-    protected Task<AuthenticationState> AuthState { get; set; }
 
     private int id;
     private User user;
@@ -87,6 +85,9 @@
         ShowGeneralInformation();
     }
 
+    /// <summary>
+    /// Shows form for editing general user information
+    /// </summary>
     private void ShowGeneralInformation()
     {
         if (!isPageOwer)
@@ -109,6 +110,9 @@
         }
     }
 
+    /// <summary>
+    /// Shows form for editing password
+    /// </summary>
     private void ShowPasswordFrom()
     {
         registerFormRender = @<Animate Animation="Animations.ZoomIn">
@@ -118,6 +122,9 @@
         generalInfoPressedButton = "";
     }
 
+    /// <summary>
+    /// Navigates to edit page
+    /// </summary>
     private async void NavigateToOwnEdit()
     {
         UserShortVersion user = StaticFunctions.GetLoggedUser(await Authentication.GetAuthenticationStateAsync());

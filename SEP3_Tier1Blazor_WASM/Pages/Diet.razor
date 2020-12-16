@@ -1,10 +1,7 @@
 ﻿@page "/profile/{UserArgument}/Diet"
 @using SEP3_Tier1Blazor_WASM.Data.DietData
-@using SEP3_Tier1Blazor_WASM.Models.Diet
-@using SEP3_Tier1Blazor_WASM.Models.UserModels
 @inject IDietManager DietManager
 @inject AuthenticationStateProvider Authentication
-
 
 <ModalUserList @ref="@modalUserList"/>
 @if (currentLoggedId == userId)
@@ -81,12 +78,10 @@
          <button class="scheduler-button" @onclick=LoadMorePrivate>Load more</button>
     </div>
 
-
 @code {
 
     [CascadingParameter]
     public ModalException ModalException { get; set; }
-    
     [Parameter]
     public string UserArgument { get; set; }
 
@@ -120,6 +115,9 @@
        
     }
 
+    /// <summary>
+    /// Sends a request to creat new diet
+    /// </summary>
     private async Task CreateNewDiet()
     {
         try
@@ -145,8 +143,10 @@
         }
        
     }
-
-
+    
+    /// <summary>
+    /// Loads all user diets
+    /// </summary>
     private async Task LoadDiets()
     {
         try
@@ -166,8 +166,9 @@
        
     }
 
-
-
+    /// <summary>
+    /// Load more public diets
+    /// </summary>
     private async Task LoadMorePublic()
     {
         try
@@ -188,6 +189,9 @@
       
     }
 
+    /// <summary>
+    /// Load more private diets
+    /// </summary>
     private async Task LoadMorePrivate()
     {
         try
@@ -208,12 +212,17 @@
       
     }
 
+    /// <summary>
+    /// Shows and hides add new diet mode
+    /// </summary>
     private void ToggleAddMode()
     {
         isAddMode = !isAddMode;
     }
 
-
+    /// <summary>
+    /// Shares diet with friend from friend list
+    /// </summary>
     private async Task ShareDiet()
     {
         try
@@ -235,9 +244,12 @@
 
     }
 
+    /// <summary>
+    /// Checks if current user is an owner of a diet
+    /// <param name="id">The given id</param>
+    /// </summary>
     private bool CheckIfUserIsOwner(int id)
     {
         return currentLoggedId == id;
     }
-
 }

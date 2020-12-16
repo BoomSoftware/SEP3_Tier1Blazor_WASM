@@ -49,6 +49,8 @@
 
 
 @code {
+    [CascadingParameter]
+    public ModalException ModalException { get; set; }
 
     [Parameter]
     public EventCallback<TrainingSVWithTime> CreateTrainingEvent { get; set; }
@@ -76,24 +78,35 @@
 
     protected override async Task OnInitializedAsync()
     {
-        publicTrainings = new List<TrainingSVWithOwner>();
-        privateTrainings = new List<TrainingShortVersion>();
+        try
+        {
+            publicTrainings = new List<TrainingSVWithOwner>();
+            privateTrainings = new List<TrainingShortVersion>();
 
-        currentLoggedId = StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync());
-        
-        var tempPublic = await TrainingManager.GetPublicTrainings(publicTrainings.Count);
-        if (tempPublic != null)
-        {
-            publicTrainings = tempPublic;
+            currentLoggedId = StaticFunctions.GetLoggedUserId(await Authentication.GetAuthenticationStateAsync());
+
+            var tempPublic = await TrainingManager.GetPublicTrainings(publicTrainings.Count);
+            if (tempPublic != null)
+            {
+                publicTrainings = tempPublic;
+            }
+
+            var tempPrivate = await TrainingManager.GetPrivateTrainingsForUser(currentLoggedId, privateTrainings.Count);
+            if (tempPrivate != null)
+            {
+                privateTrainings = tempPrivate;
+            }
         }
-        
-        var tempPrivate = await TrainingManager.GetPrivateTrainingsForUser(currentLoggedId, privateTrainings.Count);
-        if (tempPrivate != null)
+        catch
         {
-            privateTrainings = tempPrivate;
+            ModalException.Open();
         }
+      
     }
-
+    
+    /// <summary>
+    /// Opens a popup box responsible for creating new training
+    /// </summary>
     public void Open()
     {
         ModalDisplay = "block;";
@@ -101,34 +114,47 @@
         ShowBackdrop = true;
         StateHasChanged();
     }
-
-    public void Close()
+    
+    /// <summary>
+    /// Closes popup box
+    /// </summary>
+    private void Close()
     {
         ModalDisplay = "none";
         ModalClass = "";
         ShowBackdrop = false;
         StateHasChanged();
     }
-
+    
+    /// <summary>
+    /// Creates a new training and sends a request to the lower layer
+    /// </summary>
     private async Task CreateTraining()
     {
-        training.TimeStamp = DateTime;
-        if (training.Owner == null)
+        try
         {
-            training.Owner = new SearchBarUser {UserId = currentLoggedId};
+            training.TimeStamp = DateTime;
+            if (training.Owner == null)
+                training.Owner = new SearchBarUser {UserId = currentLoggedId};
+            else
+                training.Owner.UserId = currentLoggedId;
+            var tempId = await TrainingManager.AddTraining(training);
+            await UserManger.IncrementScore(currentLoggedId, 10);
+            await CreateTrainingEvent.InvokeAsync(new TrainingSVWithTime
+            {
+                Id = tempId,
+                Duration = training.DurationInMinutes,
+                TimeStamp = training.TimeStamp,
+                Title = training.Title
+            });
+            Close();
         }
-        else
-        {
-            training.Owner.UserId = currentLoggedId;
-        }
-
-        Console.WriteLine("Adding training" + training.IsPublic);
-        int tempId = await TrainingManager.AddTraining(training);
-        await UserManger.IncrementScore(currentLoggedId, 10);
-        await CreateTrainingEvent.InvokeAsync(new TrainingSVWithTime {Id = tempId, Duration = training.DurationInMinutes, TimeStamp = training.TimeStamp, Title = training.Title});
-        Close();
+        catch{ ModalException.Open(); }
     }
-
+    
+    /// <summary>
+    /// Selects and creates one of a public training displays in a list
+    /// </summary>
     private async Task SelectPublicTraining()
     {
         try
@@ -156,33 +182,54 @@
         }
         catch
         {
+            ModalException.Open();
         }
     }
-
+    
+    /// <summary>
+    /// Selects and creates one of a private  training displays in a list
+    /// </summary>
     private async Task SelectPrivateTraining()
     {
-        if (privateTraining.Id != 0)
+        try
         {
-            var loadedTraining = await TrainingManager.GetTrainingById(privateTraining.Id);
-            privateTraining = loadedTraining;
-            privateTraining.TimeStamp = DateTime;
+            if (privateTraining.Id != 0)
+            {
+                var loadedTraining = await TrainingManager.GetTrainingById(privateTraining.Id);
+                privateTraining = loadedTraining;
+                privateTraining.TimeStamp = DateTime;
 
-            if (privateTraining.Owner == null)
-                privateTraining.Owner = new SearchBarUser {UserId = currentLoggedId};
+                if (privateTraining.Owner == null)
+                    privateTraining.Owner = new SearchBarUser {UserId = currentLoggedId};
+                else
+                    privateTraining.Owner.UserId = currentLoggedId;
+
+                var newId = await TrainingManager.AddTraining(privateTraining);
+                await CreateTrainingEvent.InvokeAsync(new TrainingSVWithTime
+                {
+                    Id = newId,
+                    Duration = privateTraining.DurationInMinutes,
+                    TimeStamp = privateTraining.TimeStamp,
+                    Title = privateTraining.Title
+                });
+                Close();
+            }
             else
-                privateTraining.Owner.UserId = currentLoggedId;
-
-            int newId = await TrainingManager.AddTraining(privateTraining);
-            await CreateTrainingEvent.InvokeAsync(new TrainingSVWithTime {Id = newId, Duration = privateTraining.DurationInMinutes, TimeStamp = privateTraining.TimeStamp, Title = privateTraining.Title});
-            Close();
+            {
+                errorMessage = "Please select a training";
+                StateHasChanged();
+            }
         }
-        else
+        catch
         {
-            errorMessage = "Please select a training";
-            StateHasChanged();
+            ModalException.Open();
         }
+      
     }
-
+    
+    /// <summary>
+    /// Loads and displays a list of public trainings
+    /// </summary>
     private void OnPublicTraining()
     {
         inCreationMode = true;
@@ -198,7 +245,10 @@
                                 <button class="customizer-button creator-button" style="margin-top: 10px" @onclick="SelectPublicTraining">Add Training</button>
                             </div>;
     }
-
+    
+    /// <summary>
+    /// Loads and displays a list of private trainings
+    /// </summary>
     private void OnPrivateTraining()
     {
         inCreationMode = true;
@@ -214,7 +264,10 @@
                                 <button class="customizer-button creator-button" style="margin-top: 10px" @onclick="SelectPrivateTraining">Add Training</button>
                             </div>;
     }
-
+    
+    /// <summary>
+    /// Displays a new training form
+    /// </summary>
     private void OnNewTraining()
     {
         inCreationMode = true;

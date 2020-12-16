@@ -21,8 +21,14 @@ using SEP3_Tier1Blazor_WASM.Data.UserData;
 
 namespace SEP3_Tier1Blazor_WASM
 {
+    /// <summary>
+    /// The class responsible for setting all services and running the application
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// Main method for adding services, setting policies and starting the application
+        /// </summary>
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -30,12 +36,12 @@ namespace SEP3_Tier1Blazor_WASM
 
             builder.Services.AddScoped(
                 sp => new HttpClient {BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)});
-            builder.Services.AddSingleton<IUserManger, UserManagerRest>();
-            builder.Services.AddSingleton<IPostManager, PostManagerRest>();
-            builder.Services.AddSingleton<IAdminManager, AdminManagerRest>();
-            builder.Services.AddSingleton<ITrainingManager, TrainingManagerRest>();
-            builder.Services.AddSingleton<IDietManager, DietManagerRest>();
-            builder.Services.AddSingleton<IChatManager, ChatManagerRest>();
+            builder.Services.AddScoped<IUserManger, UserManagerRest>();
+            builder.Services.AddScoped<IPostManager, PostManagerRest>();
+            builder.Services.AddScoped<IAdminManager, AdminManagerRest>();
+            builder.Services.AddScoped<ITrainingManager, TrainingManagerRest>();
+            builder.Services.AddScoped<IDietManager, DietManagerRest>();
+            builder.Services.AddScoped<IChatManager, ChatManagerRest>();
             builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
             builder.Services.AddSingleton<IFileUpload, IFileUploadManager>();
             builder.Services.AddSingleton<ILocalStorage, LocalStorageProvider>();
@@ -94,7 +100,6 @@ namespace SEP3_Tier1Blazor_WASM
                 
                 
             });
-
             await builder.Build().RunAsync();
         }
     }

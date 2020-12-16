@@ -31,8 +31,7 @@
     private string userPressedButton;
     private string companyPressedButton;
     private List<int> posts;
-    
-    int totalNumberOfUsers;
+    private int totalNumberOfUsers;
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,6 +47,9 @@
        
     }
 
+    /// <summary>
+    /// Navigates to user profile
+    /// </summary>
     private void OpenUsersView()
     {
         tableRender = @<Animate Animation="Animations.ZoomIn">
@@ -55,6 +57,9 @@
                              </Animate>;
     }
 
+    /// <summary>
+    /// Displays posts in admin view
+    /// </summary>
     private async Task OpenPostsView()
     {
         try
@@ -75,6 +80,9 @@
       
     }
 
+    /// <summary>
+    /// Loads more posts to the post view
+    /// </summary>
     private async Task LoadMorePosts()
     {
         try
@@ -96,6 +104,9 @@
       
     }
 
+    /// <summary>
+    /// Log out administrator from a system
+    /// </summary>
     private void Logout()
     {
        ((CustomAuthenticationStateProvider)Authentication).Logout();

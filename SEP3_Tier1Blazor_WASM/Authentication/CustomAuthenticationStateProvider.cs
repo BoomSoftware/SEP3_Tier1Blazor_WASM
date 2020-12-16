@@ -17,12 +17,18 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
 
         public UserShortVersion CachedUser;
 
+        /// <summary>
+        /// Two argument constructor sets private fields
+        /// </summary>
         public CustomAuthenticationStateProvider(IJSRuntime jsRuntime, IUserManger userManger)
         {
             this.jsRuntime = jsRuntime;
             this.userManger = userManger;
         }
 
+        /// <summary>
+        /// Get authentication state based on browser session storage
+        /// </summary>
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             var identity = new ClaimsIdentity();
@@ -43,7 +49,10 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
             ClaimsPrincipal cachedClaimsPrincipal = new ClaimsPrincipal(identity);
             return await Task.FromResult(new AuthenticationState(cachedClaimsPrincipal));
         }
-
+        
+        /// <summary>
+        /// Sends a request to login a users with given credentials and stored result in a browser session storage
+        /// </summary>
         public async Task Login(Login login)
         {
             Console.WriteLine("Validating log in");
@@ -71,6 +80,9 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
                 Task.FromResult<AuthenticationState>(new AuthenticationState(new ClaimsPrincipal(identity))));
         }
 
+        /// <summary>
+        /// Sends a request to logout a users and clear this value from browse session storage
+        /// </summary>
         public async void Logout()
         {
             CachedUser = null;
@@ -81,6 +93,9 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
             //websocket request 
         }
 
+        /// <summary>
+        /// Sets all claims identity required in the application
+        /// </summary>
         private ClaimsIdentity SetupClaimsForUser(UserShortVersion user)
         {
             List<Claim> claims = new List<Claim>();
@@ -95,15 +110,6 @@ namespace SEP3_Tier1Blazor_WASM.Authentication
             ClaimsIdentity identity = new ClaimsIdentity(claims, "apiauth_type");
             return identity;
         }
-
-        private ClaimsIdentity SetupClaimsForAdmin(UserShortVersion admin)
-        {
-            List<Claim> claims = new List<Claim>();
-
-            claims.Add(new Claim("Id", admin.UserId.ToString()));
-            claims.Add(new Claim("AccountType", admin.AccountType));
-            ClaimsIdentity identity = new ClaimsIdentity(claims, "apiauth_type");
-            return identity;
-        }
+        
     }
 }

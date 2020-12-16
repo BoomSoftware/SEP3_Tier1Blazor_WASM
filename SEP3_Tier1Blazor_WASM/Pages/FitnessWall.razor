@@ -37,8 +37,7 @@
 @code {
     [CascadingParameter]
     public ModalException ModalException { get; set; }
-    
-    
+
     private List<int> tempPostsIds;
     private List<int> postsIds;
     private bool reloadList;
@@ -64,6 +63,10 @@
       
     }
 
+    /// <summary>
+    /// Displays new created post with a given id
+    /// <param name="id">Given id</param>
+    /// </summary>
     private void NewPostCreated(int id)
     {
         reloadList = true;
@@ -74,6 +77,9 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Loads more posts after receiving javascript request
+    /// </summary>
     [JSInvokable("LoadMorePosts")]
     public async Task LoadPosts()
     {
@@ -103,8 +109,10 @@
         }
      
     }
-
-
+    
+    /// <summary>
+    /// Loads and displays all online users
+    /// </summary>
     private async Task LoadOnlineUsers()
     {
         try
@@ -120,6 +128,9 @@
       
     }
 
+    /// <summary>
+    /// Adds user to online user list after receiving javascript request
+    /// </summary>
     [JSInvokable("AddOnlineUser")]
     public void AddOnlineUser(string user)
     {
@@ -129,6 +140,9 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Removes user from online user list after receiving javascript request
+    /// </summary>
     [JSInvokable("DeleteOnlineUser")]
     public void DeleteOnlineUser(string id)
     {
@@ -138,5 +152,4 @@
         onlineUsers = temp;
         StateHasChanged();
     }
-
 }

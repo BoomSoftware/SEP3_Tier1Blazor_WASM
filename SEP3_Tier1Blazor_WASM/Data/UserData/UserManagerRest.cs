@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using SEP3_Tier1Blazor_WASM.Models.Notification;
@@ -11,19 +9,20 @@ using SEP3_Tier1Blazor_WASM.Shared;
 
 namespace SEP3_Tier1Blazor_WASM.Data.UserData
 {
+    /// <summary>
+    /// Class responsible for connecting to API and managing requests related with user
+    /// </summary>
     public class UserManagerRest : DataManager, IUserManger
     {
         private HttpClient client;
         private string uri;
-
 
         public UserManagerRest()
         {
             client = Client;
             uri = "https://localhost:8443/users";
         }
-
-
+        
         public async Task<bool> AddNewUser(User user)
         {
             HttpResponseMessage response = await client.PostAsync(uri, PrepareObjectForRequest(user));
@@ -41,7 +40,6 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
         {
             if (editedUser.Avatar == currentLogged.Avatar)
                 editedUser.Avatar = null;
-
             HttpResponseMessage response = await client.PutAsync($"{uri}/{editedUser.Id}", PrepareObjectForRequest(editedUser));
             if (response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.BadRequest)
                 return true;
@@ -50,12 +48,8 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
 
         public async Task<User> GetUser(int senderId, int receiverId)
         {
-            
             string result = await client.GetStringAsync($"{uri}?senderId={senderId}&receiverId={receiverId}");
-            Console.WriteLine(result);
-            
             User user = JsonSerializer.Deserialize<User>(result);
-
             return user;
         }
 
@@ -68,9 +62,6 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
             {
                 string responseString = await result.Content.ReadAsStringAsync();
                 UserShortVersion user =  JsonSerializer.Deserialize<UserShortVersion>(responseString);
-                
-                
-                Console.WriteLine("TYPETYPETYPE"+user.AccountType);
                 return user;
             }
 
@@ -91,8 +82,6 @@ namespace SEP3_Tier1Blazor_WASM.Data.UserData
                 ActionType = actionType.ToString(),
                 Value = value
             };
-
-            
             await client.PostAsync($"{uri}/actions", PrepareObjectForRequest(userAction));
         }
 

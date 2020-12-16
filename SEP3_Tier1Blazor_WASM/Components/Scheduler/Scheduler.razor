@@ -8,7 +8,6 @@
 @inject ITrainingManager TrainingManager
 @inject AuthenticationStateProvider Authentication;
 
-
 @trainingsRender
 <Modal @ref="@modal" DeleteTrainingEvent="@OnDeleteTraining"/>
 <ModalUserList @ref="@modalUserList"/>
@@ -53,7 +52,10 @@
                             {
                                 string dayInWeek = dayNames[j];
                                 int hour = StartHour + i;
-                                <td id="@(dayNames[j] + '-' + (StartHour + i))" class="scheduler-td" @onclick=@(() => OpenTrainingCreator(dayInWeek, hour))></td>
+                                <td id="@(dayNames[j] + '-' + (StartHour + i))"
+                                    class="scheduler-td"
+                                    @onclick=@(() => OpenTrainingCreator(dayInWeek, hour))>
+                                </td>
                             }
                         </tr>
                     }
@@ -63,15 +65,12 @@
     </table>
 </div>
 
-
 @code {
 
     [Parameter]
     public int DaysInWeek { get; set; }
-
     [Parameter]
     public int StartHour { get; set; }
-
     [Parameter]
     public int EndHour { get; set; }
     [Parameter]
@@ -83,8 +82,6 @@
     private ModalTrainingCreator modalCreator;
     private DotNetObjectReference<Scheduler> objectReference;
     private int currentLoggedId;
-
-
     private string[] dayNames = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
     private int weekNumber;
     private CultureInfo myCI = new CultureInfo("en-US");
@@ -118,6 +115,9 @@
         }
     }
     
+    /// <summary>
+    /// Sends a request to java script file for setting trainings position on the site 
+    /// </summary>
     private async Task SetTrainingsPosition()
     {
         try
@@ -129,20 +129,17 @@
                 var top = await JS.InvokeAsync<double>("getElementTop", elementId);
                 var left = await JS.InvokeAsync<double>("getElementLeft", elementId);
                 var width = await JS.InvokeAsync<double>("getElementWidth", elementId);
-
                 int height = training.Duration;
 
                 if (training.TimeStamp.Minute > 0)
-                {
                     top += training.TimeStamp.Minute;
-                }
 
                 string trainingCss = $"top: {top}px; left:{left}px; min-height:{height}px; max-height:{height}px; width:{width}px; ";
-
-                Console.WriteLine("title" + training.Title);
+                
                 trainingsRender += @<div @onclick="e => OpenTrainingView(training.Id)">
                                        <div class="scheduler-training" style="@trainingCss">
-                                           <p class="scheduler-training-time">@training.TimeStamp.ToString("HH:mm") - @training.TimeStamp.AddMinutes(training.Duration).ToString("HH:mm")</p>
+                                           <p class="scheduler-training-time">@training.TimeStamp.ToString("HH:mm") - 
+                                               @training.TimeStamp.AddMinutes(training.Duration).ToString("HH:mm")</p>
                                            <div class="col-12">
                                                <h3 class="scheduler-training-title">@training.Title</h3>
                                            </div>
@@ -158,6 +155,9 @@
         }
     }
 
+    /// <summary>
+    /// Opens training creator
+    /// </summary>
     private void OpenTrainingCreator(string day, int hour)
     {
         if (currentLoggedId == UserId)
@@ -172,6 +172,10 @@
         }
     }
 
+    /// <summary>
+    /// Returns a date of a given day
+    /// <param name="day">The given day</param>
+    /// </summary>
     private DateTime FirstDateOfWeek(string day)
     {
         DateTime jan1 = new DateTime(DateTime.Today.Year, 1, 1);
@@ -215,6 +219,9 @@
         return result.AddDays(-3 + dayNumber);
     }
 
+    /// <summary>
+    /// Loads and displays all training in a given date
+    /// </summary>
     private async Task LoadTrainingsForWeek()
     {
         trainingModels = new List<TrainingSVWithTime>();
@@ -228,6 +235,10 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Opens training by a given id
+    /// <param name="trainingId">The given training id</param>
+    /// </summary>
     private async Task OpenTrainingView(int trainingId)
     {
         Console.WriteLine("Training id: " + trainingId);
@@ -237,18 +248,29 @@
         modal.Open();
     }
     
+    /// <summary>
+    /// Deletes training by a given id
+    /// <param name="deletedId">The given training id</param>
+    /// </summary>
     private async Task OnDeleteTraining(int deletedId)
     {
         trainingModels.RemoveAll(e => e.Id == deletedId);
         await SetTrainingsPosition();
     }
 
+    /// <summary>
+    /// Create a new training with a given values
+    /// <param name="training">The given training</param>
+    /// </summary>
     private async Task OnCreatedTraining(TrainingSVWithTime training)
     {
         trainingModels.Add(training);
         await SetTrainingsPosition();
     }
 
+    /// <summary>
+    /// Increases week number and reloads scheduler
+    /// </summary>
     private async Task IncreaseWeekNumber()
     {
         weekNumber++;
@@ -257,6 +279,9 @@
         await LoadTrainingsForWeek();
     }
 
+    /// <summary>
+    /// Decreases week number and reloads scheduler
+    /// </summary>
     private async Task DecreaseWeekNumber()
     {
         weekNumber--;
@@ -267,6 +292,9 @@
         await LoadTrainingsForWeek();
     }
 
+    /// <summary>
+    /// Opens share training option
+    /// </summary>
     private async Task ShareScheduler()
     {
         modalUserList.CurrentLoggedId = currentLoggedId;
